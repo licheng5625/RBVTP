@@ -31,14 +31,14 @@ using namespace std;
 /**
  * This class provides a mapping between node addresses and their positions.
  */
-class INET_API DelayPacketTable {
+class INET_API DelayPacketTableforRBVTP {
     private:
 
          typedef std::multimap<IPvXAddress,IPv4Datagram * > AddressToPacket;
          AddressToPacket delaytable;
 
     public:
-         DelayPacketTable() { }
+         DelayPacketTableforRBVTP() { }
 
 
 

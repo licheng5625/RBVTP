@@ -30,14 +30,14 @@
 /**
  * This class provides a mapping between node addresses and their positions.
  */
-class INET_API PacketWaitingTable {
+class INET_API PacketWaitingTableforRBVTP {
     private:
          typedef std::pair<RBVTPPacket *, IPv4Datagram *>RBVTPPacketTOIPv4Datagram;
          typedef std::map<cMessage *,RBVTPPacketTOIPv4Datagram> TimetoRDPacket;
          TimetoRDPacket waitinglist;
 
     public:
-         PacketWaitingTable() { }
+         PacketWaitingTableforRBVTP() { }
 
 
 

@@ -22,14 +22,14 @@
 
 
 
-void PacketWaitingTable::addPacket(cMessage * timer ,RBVTPPacket * packet,IPv4Datagram * ipv4)
+void PacketWaitingTableforRBVTP::addPacket(cMessage * timer ,RBVTPPacket * packet,IPv4Datagram * ipv4)
 {
     waitinglist[timer] = RBVTPPacketTOIPv4Datagram(packet, ipv4);
 
     // waitinglist[timer] = packet;
 }
 
-RBVTPPacket * PacketWaitingTable::getRBVTPPacket(cMessage * timer )
+RBVTPPacket * PacketWaitingTableforRBVTP::getRBVTPPacket(cMessage * timer )
 {
     TimetoRDPacket::const_iterator it = waitinglist.find(timer);
         if (it == waitinglist.end())
@@ -40,7 +40,7 @@ RBVTPPacket * PacketWaitingTable::getRBVTPPacket(cMessage * timer )
         }
 }
 
-IPv4Datagram * PacketWaitingTable::getDataPacket(cMessage * timer )
+IPv4Datagram * PacketWaitingTableforRBVTP::getDataPacket(cMessage * timer )
 {
     TimetoRDPacket::const_iterator it = waitinglist.find(timer);
         if (it == waitinglist.end())
@@ -51,14 +51,14 @@ IPv4Datagram * PacketWaitingTable::getDataPacket(cMessage * timer )
         }
 }
 
-void PacketWaitingTable::removePacket(cMessage*  timer) {
+void PacketWaitingTableforRBVTP::removePacket(cMessage*  timer) {
     TimetoRDPacket::iterator it = waitinglist.find(timer);
     //delete it->second;
     waitinglist.erase(it);
    // cancelAndDelete(timer);
 }
 
-cMessage* PacketWaitingTable::findPacket(RBVTPPacket*  packet) {
+cMessage* PacketWaitingTableforRBVTP::findPacket(RBVTPPacket*  packet) {
     for (TimetoRDPacket::const_iterator it = waitinglist.begin(); it != waitinglist.end(); it++)
     {
         if(it->second.first->getSeqnum()==packet->getSeqnum()&&it->second.first->getdesAddress()==packet->getdesAddress()&&it->second.first->getPacketType()==packet->getPacketType())
@@ -69,7 +69,7 @@ cMessage* PacketWaitingTable::findPacket(RBVTPPacket*  packet) {
     return NULL;
 }
 
-void PacketWaitingTable::clear() {
+void PacketWaitingTableforRBVTP::clear() {
     waitinglist.clear();
 }
 

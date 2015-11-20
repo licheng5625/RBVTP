@@ -31,13 +31,13 @@ using namespace std;
 /**
  * This class provides a mapping between node addresses and their positions.
  */
-class INET_API RTSWaitingTable {
+class INET_API RTSWaitingTableforRBVTP {
     private:
          typedef std::map<RBVTPPacket*,RBVTPPacket* > RTSWaitlist;
          RTSWaitlist waitinglist;
 
     public:
-         RTSWaitingTable() { }
+         RTSWaitingTableforRBVTP() { }
 
          void removePacket(RBVTPPacket* rtspacket) ;
 

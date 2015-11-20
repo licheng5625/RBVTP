@@ -16,19 +16,19 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
 
-#include "RBVTP/RTSwaitingtable.h"
+#include "RBVTP/RTSWaitingTable.h"
 
 
 
 
 
-void RTSWaitingTable::addRTS(RBVTPPacket* rtspacket,RBVTPPacket* rbvtppacket)
+void RTSWaitingTableforRBVTP::addRTS(RBVTPPacket* rtspacket,RBVTPPacket* rbvtppacket)
 {
     waitinglist[rtspacket] = rbvtppacket;
  }
 
 
-bool RTSWaitingTable::hasWaitingRTS(RBVTPPacket* rtspacket)   {
+bool RTSWaitingTableforRBVTP::hasWaitingRTS(RBVTPPacket* rtspacket)   {
 
     RTSWaitlist::const_iterator it = waitinglist.find(rtspacket);
            if (it == waitinglist.end())
@@ -38,7 +38,7 @@ bool RTSWaitingTable::hasWaitingRTS(RBVTPPacket* rtspacket)   {
                return true;
            }
 }
-bool RTSWaitingTable::getRBVTPPacket(RBVTPPacket* rtspacket)   {
+bool RTSWaitingTableforRBVTP::getRBVTPPacket(RBVTPPacket* rtspacket)   {
 
     RTSWaitlist::const_iterator it = waitinglist.find(rtspacket);
            if (it == waitinglist.end())
@@ -48,12 +48,12 @@ bool RTSWaitingTable::getRBVTPPacket(RBVTPPacket* rtspacket)   {
                return it->second;
            }
 }
-void RTSWaitingTable::removePacket(RBVTPPacket* rtspacket) {
+void RTSWaitingTableforRBVTP::removePacket(RBVTPPacket* rtspacket) {
     RTSWaitlist::iterator it = waitinglist.find(rtspacket);
      waitinglist.erase(it);
  }
 
-void RTSWaitingTable::clear() {
+void RTSWaitingTableforRBVTP::clear() {
     waitinglist.clear();
  }
 

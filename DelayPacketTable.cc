@@ -22,7 +22,7 @@
 
 
 
-void DelayPacketTable::addPacket(const IPvXAddress & address,IPv4Datagram * packet)
+void DelayPacketTableforRBVTP::addPacket(const IPvXAddress & address,IPv4Datagram * packet)
 {
 
  delaytable.insert( std::pair<IPvXAddress, IPv4Datagram *>(address, packet));
@@ -30,7 +30,7 @@ void DelayPacketTable::addPacket(const IPvXAddress & address,IPv4Datagram * pack
 }
 
 
-bool DelayPacketTable::hasPacket(const IPvXAddress & address)   {
+bool DelayPacketTableforRBVTP::hasPacket(const IPvXAddress & address)   {
 
     AddressToPacket::const_iterator it = delaytable.find(address);
               if (it == delaytable.end())
@@ -45,7 +45,7 @@ bool DelayPacketTable::hasPacket(const IPvXAddress & address)   {
 
 
 
-void DelayPacketTable::removePacket(const IPvXAddress & address) {
+void DelayPacketTableforRBVTP::removePacket(const IPvXAddress & address) {
         std::multimap<IPvXAddress, IPv4Datagram *>::iterator lt = getlowbound(address);
         std::multimap<IPvXAddress, IPv4Datagram *>::iterator ut = getupperbound(address);
         delaytable.erase(lt, ut);
@@ -53,18 +53,18 @@ void DelayPacketTable::removePacket(const IPvXAddress & address) {
 
 
 
-std::multimap<IPvXAddress, IPv4Datagram *>::iterator DelayPacketTable::getlowbound(const IPvXAddress& target)
+std::multimap<IPvXAddress, IPv4Datagram *>::iterator DelayPacketTableforRBVTP::getlowbound(const IPvXAddress& target)
         {
             return delaytable.lower_bound(target);
         }
 
-std::multimap<IPvXAddress, IPv4Datagram *>::iterator DelayPacketTable::getupperbound(const IPvXAddress& target)
+std::multimap<IPvXAddress, IPv4Datagram *>::iterator DelayPacketTableforRBVTP::getupperbound(const IPvXAddress& target)
       {
           return delaytable.upper_bound(target);
       }
 
 
-void DelayPacketTable::clear() {
+void DelayPacketTableforRBVTP::clear() {
     delaytable.clear();
  }
 

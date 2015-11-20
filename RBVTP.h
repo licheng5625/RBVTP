@@ -27,7 +27,7 @@ public:
   //  typedef std::map<IPvXAddress, int> RDPacketSeenlist;
 
 protected:
-    PacketWaitingTable packetwaitinglist;
+    PacketWaitingTableforRBVTP packetwaitinglist;
 
     double HoldingIndex ;
     double recPow;
@@ -47,11 +47,11 @@ protected:
     double a2;
     double a3;
 
-    DelayPacketTable delayPacketlist;
+    DelayPacketTableforRBVTP delayPacketlist;
     IInterfaceTable *interfaceTable;
     SearchTable mysearchedtable;
     ConnectionTable myconnectionTable;
-    RTSWaitingTable RTSwaitinglist;
+    RTSWaitingTableforRBVTP RTSwaitinglist;
     void processSelfMessage(cMessage * message);
   //   void processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrlInfo){ return ; }
     void processWaitingTimer(cMessage * message,RBVTPPacket *rbvtpPacket,const IPv4Datagram * pakcet);
