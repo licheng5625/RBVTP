@@ -38,7 +38,6 @@ class INET_API RBVTPPacket: public cPacket {
     RBVTPPacketType packetTpye_var;
     IPvXAddress src_ip;
     IPvXAddress des_ip;
-    IPvXAddress nexthop_ip;
 
     Coord src_position;
     Coord des_position;
@@ -51,7 +50,7 @@ class INET_API RBVTPPacket: public cPacket {
 
 
 public:
-
+    IPvXAddress nexthop_ip;
     RBVTPPacket(const char *name=NULL, int kind=0);
     RBVTPPacket(const RBVTPPacket& other);
     virtual ~RBVTPPacket();

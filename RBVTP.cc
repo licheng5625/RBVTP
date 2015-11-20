@@ -388,7 +388,7 @@ void RBVTP::sendQueuePacket(const IPvXAddress& target,std::vector<std::string> r
 
             //UDPPacket * rbvtppascket=check_and_cast<UDPPacket *>(rbvtppascket);
            // rbvtrdataPacket->setdesAddress(nexthop);
-            //rbvtrdataPacket->setnexthopAddress(nexthop);
+             rbvtrdataPacket->nexthop_ip=nexthop;
          }
          // DATASeenlist.SeePacket(rbvtrdataPacket->getsrcAddress(), rbvtrdataPacket->getSeqnum());
         RBVTP_EV << "Sending queued RBVTP: source " << rbvtppacket->getsrcAddress() << ", destination " << rbvtppacket->getdesAddress()<<", name: " << rbvtppacket->getName()<<", nexthop: "<<nexthop << endl;
