@@ -193,10 +193,14 @@ INetfilter::IHook::Result RBVTP::datagramPostRoutingHook(IPv4Datagram * datagram
        if (destination.isMulticast() || destination.isLimitedBroadcastAddress()|| routingTable->isLocalAddress(destination))
                   return ACCEPT;
        else{
-           if (dynamic_cast<RBVTPPacket *> (dynamic_cast<cPacket *>(datagram)->getEncapsulatedPacket()))
+           RBVTPPacket * rbvtppacket=check_and_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
+           if (rbvtppacket)
            {
-               RBVTPPacket * rbvtpPacket = check_and_cast<RBVTPPacket *>(dynamic_cast<cPacket *>(datagram)->getEncapsulatedPacket());
-               nextHop=rbvtpPacket->getnexthopAddress().get4();
+               if(rbvtppacket->getPacketType()==RBVTP_CP)
+               {
+                   rbvtppacket->setdesAddress(IPv4Address::UNSPECIFIED_ADDRESS);
+               }
+                nextHop=rbvtppacket->getnexthopAddress().get4();
            }else
            {
             nextHop=IPv4Address::ALLONES_ADDRESS;
