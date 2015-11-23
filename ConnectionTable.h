@@ -24,17 +24,28 @@
 #include "INETDefs.h"
 #include "IPvXAddress.h"
 #include <IPv4Datagram.h>
+#include <RBVTP/RBVTPDefs.h>
 
 using namespace std;
+
+
+class Connectstate {
+public:
+    Connectstate( ConnFalg thisflag=Unreachable, simtime_t timestamp=simTime(), simtime_t entry_timeout=simTime()+100);
+    ConnFalg thisflag;
+    simtime_t timestamp;
+    simtime_t entry_timeout;
+};
 
 /**
  * This class provides a mapping between node addresses and their positions.
  */
 class INET_API ConnectionTable {
     private:
+        typedef std::pair<std::string,std::string>Connection;
 
-         typedef std::multimap<std::string,std::string > Connections;
-         Connections connectionstable;
+         typedef std::map<Connection,Connectstate > Connectiontable;
+         Connectiontable connectionstable;
 
     public:
          ConnectionTable() { }
@@ -44,12 +55,10 @@ class INET_API ConnectionTable {
         bool hasConnect( std::string connect);
 
         void addConnection(std::string roadsrc,std::string roaddes);
-
-        std::multimap<std::string ,std::string >::iterator getlowbound(std::string roadsrc);
-
-        std::multimap<std::string ,std::string >::iterator getupperbound(std::string roadsrc);
-
-
+        void addConnection(std::string roadsrc,std::string roaddes,Connectstate conn);
+        Connectstate getConnectState(std::string roadsrc,std::string roaddes)   ;
+        std::vector<std::string>  getConnections(std::string srcconn);
+        std::vector<std::string>  getReachableConnections(std::string srcconn);
 
         void clear();
 

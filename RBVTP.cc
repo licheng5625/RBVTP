@@ -58,27 +58,31 @@ void RBVTP::initialize( int stage){
         RouteInterface::configureInterfaces(par("interfaces"));
         EV_LOG("RBVTP",getHostName());
         std::list<std::string> interjections=tracimanager->commandGetJunctionIds();
-        for(std::list<std::string>::iterator iter=interjections.begin();iter!=interjections.end();++iter)
+       /* for(std::list<std::string>::iterator iter=interjections.begin();iter!=interjections.end();++iter)
         {
             RBVTP_EV<<*iter<<"   "<<tracimanager->commandGetJunctionPosition(*iter)<<endl;
-        }
-        std::list<std::string> roadsname=tracimanager->commandGetLaneIds();
-            for(std::list<std::string>::iterator iter=roadsname.begin();iter!=roadsname.end();++iter)
-            {
-                std::string templane=*iter;
-                if(templane.length()==10)
-                {
-                RBVTP_EV<<*iter<<endl;
-                templane=templane.substr(0,7);
-                 myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
-                RBVTP_EV<<templane.substr(5,7)<<endl;
-                }
-            }
+        }*/
+        initConnctionsTable();
         nb->subscribe(this, NF_LINK_FULL_PROMISCUOUS);
         scheduleAt(simTime() + nextCPtimer, CPTimer);
         }
     }
  }
+void RBVTP::initConnctionsTable()
+{
+    std::list<std::string> roadsname=tracimanager->commandGetLaneIds();
+    for(std::list<std::string>::iterator iter=roadsname.begin();iter!=roadsname.end();++iter)
+    {
+        std::string templane=*iter;
+        if(templane.length()==10)
+        {
+        //RBVTP_EV<<*iter<<endl;
+        templane=templane.substr(0,7);
+         myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
+        //RBVTP_EV<<templane.substr(5,7)<<endl;
+        }
+    }
+}
 std::vector<std::string>  RBVTP::getConnOfRoad(std::string road)
 {
     std::vector<std::string>  conn;
@@ -156,13 +160,7 @@ void RBVTP::processWaitingTimer(cMessage * message,RBVTPPacket *rbvtpPacket,cons
 }
 std::vector<std::string>  RBVTP::getConnections(std::string srcconn)
 {
-    std::vector<std::string>  conn;
-    std::multimap<std::string,std::string > ::iterator lt = myconnectionTable.getlowbound(srcconn);
-    std::multimap<std::string,std::string > ::iterator ut = myconnectionTable.getupperbound(srcconn);
-    for (std::multimap<std::string,std::string > ::iterator it = lt; it != ut; it++) {
-        conn.push_back(  it->second);
-     }
-    return conn;
+    return myconnectionTable.getConnections(srcconn);
 }
 void RBVTP::processCPTimer(simtime_t timer)
 {
@@ -271,7 +269,7 @@ void RBVTP::processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrl
                break;
      case RBVTP_CP:
                EV_LOG("RBVTR","Process RBVTP_CP");
-               //processCPPACKET(rbvtpPacket);
+               processCPPACKET(rbvtpPacket);
                break;
      case RBVTP_RTS:
                 EV_LOG("RBVTR","Process RBVTP_RTS");
@@ -365,6 +363,43 @@ void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
       }
 }
 
+void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
+{
+    double distence =(getConnectPosition(rbvtpPacket->getdesconn())-getSelfPosition()).length();
+    rbvtpPacket->nexthop_ip=IPv4Address::UNSPECIFIED_ADDRESS;
+    if(distence<10)
+      {
+        std::string srcconn=rbvtpPacket->getdesconn();
+        std::vector <std::string> desconnlist=getConnections(srcconn);
+        Connectstate conn(Reachable);
+        rbvtpPacket->myconnectionTable.addConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+        //rbvtpPacket->setdesconn()
+        sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
+      }
+    else
+      {
+        RBVTP_EV<<"send packets IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
+        sendQueuePacket((rbvtpPacket->getnexthopAddress()),rbvtpPacket->getroads(),rbvtpPacket->getsrcAddress());
+      }
+}
+INetfilter::IHook::Result RBVTP::datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry)
+{
+    EV_LOG("RBVTR","datagramLocalInHook");
+    UDPPacket *udpPacket = dynamic_cast<UDPPacket *>(datagram->getEncapsulatedPacket());
+
+    // check_and_cast<cPacket *>(udpPacket->decapsulate());
+//    cPacket * networkPacket = dynamic_cast<cPacket *>(datagram);
+//    RBVTPPacket * rbvtppacket=dynamic_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
+//    if (rbvtppacket&&rbvtppacket->getPacketType()==RBVTP_DATA) {
+//        UDPPacket *  udppacket= dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket());
+//
+//        networkPacket->decapsulate();
+//        networkPacket->encapsulate(udppacket->decapsulate());
+//        delete udppacket;
+//    }
+    return ACCEPT;
+}
+
 void RBVTP::sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop)
 {
     RBVTP_EV << "Completing route discovery, originator " << getSelfIPAddress() << ", target " << target <<", nexthop: " <<nexthop<< endl;
@@ -397,8 +432,8 @@ void RBVTP::sendQueuePacket(const IPvXAddress& target,std::vector<std::string> r
          // DATASeenlist.SeePacket(rbvtrdataPacket->getsrcAddress(), rbvtrdataPacket->getSeqnum());
         RBVTP_EV << "Sending queued RBVTP: source " << rbvtppacket->getsrcAddress() << ", destination " << rbvtppacket->getdesAddress()<<", name: " << rbvtppacket->getName()<<", nexthop: "<<nexthop << endl;
         std::cout << "Sending queued RBVTP: source " << rbvtppacket->getsrcAddress() << ", destination " << rbvtppacket->getdesAddress()<<", name: " << rbvtppacket->getName()<<", nexthop: "<<nexthop << endl;
-
-         networkProtocol->reinjectQueuedDatagram( const_cast<const IPv4Datagram *>(datagram));
+        datagram->setDestAddress(nexthop.get4());
+        networkProtocol->reinjectQueuedDatagram( const_cast<const IPv4Datagram *>(datagram));
     }
     delayPacketlist.removePacket(target);
 }

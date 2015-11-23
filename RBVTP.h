@@ -85,7 +85,7 @@ private:
     virtual Result datagramPreRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop);
     virtual Result datagramForwardHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop){ return ACCEPT; }
     virtual Result datagramPostRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop) ;
-    virtual Result datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry){ return ACCEPT; }
+    virtual Result datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry);//{ return ACCEPT; }
     virtual Result datagramLocalOutHook(IPv4Datagram * datagram, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop);
 
     int squmCP;
@@ -94,6 +94,8 @@ private:
     int squmRTS;
     int squmDATA;
     std::string  oldroadID;
+    void initConnctionsTable();
+
     virtual void receiveChangeNotification(int category, const cObject *details);
     RBVTPPacket * createCPPacket(std::string scrconn,  std::string desconn,  std::string packetname);
     RBVTPPacket *createCTSPacket(RBVTPPacket *rbvtpPacket);
@@ -109,6 +111,7 @@ private:
     void processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrlInfo);
     void processRTSPACKET(RBVTPPacket * rbvtpPacket);
     void processCTSPACKET(RBVTPPacket * rbvtrPacket);
+    void processCPPACKET(RBVTPPacket * rbvtpPacket);
     simtime_t CaculateHoldTime(Coord srcPosition,Coord desPosition);
     simtime_t CaculateHoldTime(Coord srcPosition);
     void scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram);

@@ -46,7 +46,6 @@ class INET_API RBVTPPacket: public cPacket {
     unsigned int seqNum;
     std::vector<std::string> roads;
     simtime_t lifeTime;
-    ConnectionTable myconnectionTable;
 
 
 public:
@@ -87,7 +86,8 @@ public:
    virtual void setsrcconn(std::string myroads);
    virtual  std::string& getdesconn();
    virtual void setdesconn(std::string myroads);
-    virtual std::string&  getroadsToStr();
+   virtual std::string&  getroadsToStr();
+   ConnectionTable myconnectionTable;
 
 };
 inline void doPacking(cCommBuffer *b, RBVTPPacket& obj) {obj.parsimPack(b);}

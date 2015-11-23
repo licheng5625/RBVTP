@@ -15,8 +15,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //
+#ifndef __RBVTPDEFS_H_
+#define __RBVTPDEFS_H_
 
-
+enum ConnFalg {
+    Unreachable,
+    Reachable,
+    Initialized
+};
 enum RBVTPPacketType {
     RBVTP_DATA,
     RBVTP_CTS,
@@ -24,5 +30,4 @@ enum RBVTPPacketType {
     RBVTP_RU,
     RBVTP_CP
 };
-
-
+#endif

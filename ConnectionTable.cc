@@ -19,41 +19,71 @@
 #include "ConnectionTable.h"
 
 
+Connectstate::Connectstate( ConnFalg thisflag, simtime_t timestamp, simtime_t entry_timeout)
+{
+     this->thisflag=thisflag;
+     this->timestamp=timestamp;
+     this->entry_timeout=entry_timeout;
+}
 
 
 
 void ConnectionTable::addConnection(std::string roadsrc,std::string roaddes)
 {
- connectionstable.insert( std::pair<std::string ,std::string >(roadsrc, roaddes));
+    Connectstate connstate;
+    Connection conn=std::pair<std::string ,std::string >(roadsrc, roaddes);
+    connectionstable[conn]=connstate;
 }
-
+void ConnectionTable::addConnection(std::string roadsrc,std::string roaddes,Connectstate connstate)
+{
+     Connection conn=std::pair<std::string ,std::string >(roadsrc, roaddes);
+     connectionstable[conn]=connstate;
+}
 
 bool ConnectionTable::hasConnect(std::string roadsrc)   {
-
-    Connections::const_iterator it = connectionstable.find(roadsrc);
-              if (it == connectionstable.end())
-              {
-                  return true;
-              }
-              else
-              {
-                  return false;
-              }
+    for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
+       {
+           if(it->first.first==roadsrc)
+           {
+               return true;
+           }
+       }
+    return false;
 }
-
-std::multimap<std::string ,std::string >::iterator ConnectionTable::getlowbound(std::string roadsrc)
-        {
-            return connectionstable.lower_bound(roadsrc);
-        }
-
-std::multimap<std::string,std::string >::iterator ConnectionTable::getupperbound(std::string roadsrc)
-      {
-          return connectionstable.upper_bound(roadsrc);
-      }
-
-
+Connectstate ConnectionTable::getConnectState(std::string roadsrc,std::string roaddes)   {
+    for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
+       {
+           if(it->first.first==roadsrc&&it->first.second==roaddes)
+           {
+               return it->second;
+           }
+       }
+}
 void ConnectionTable::clear() {
     connectionstable.clear();
  }
 
-
+std::vector<std::string>  ConnectionTable::getConnections(std::string srcconn)
+{
+    vector<std::string> ret;
+    for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
+           {
+               if(it->first.first==srcconn)
+               {
+                   ret.push_back( it->first.second);
+               }
+           }
+    return ret;
+}
+std::vector<std::string>  ConnectionTable::getReachableConnections(std::string srcconn)
+{
+    vector<std::string> ret;
+    for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
+           {
+               if(it->first.first==srcconn&&it->second.thisflag==Reachable)
+               {
+                   ret.push_back( it->first.second);
+               }
+           }
+    return ret;
+}

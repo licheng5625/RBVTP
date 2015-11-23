@@ -30,7 +30,6 @@ Register_Class(RBVTPPacket);
 RBVTPPacket::RBVTPPacket(const char *name, int kind) : ::cPacket(name,kind)
 {   roads=std::vector<std::string>();
     // TODO Auto-generated constructor stub
-
 }
 RBVTPPacket::RBVTPPacket(const RBVTPPacket& other) : ::cPacket(other)
 {
