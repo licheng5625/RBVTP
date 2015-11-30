@@ -59,6 +59,7 @@ class INET_API ConnectionTable {
         Connectstate getConnectState(std::string roadsrc,std::string roaddes)   ;
         std::vector<std::string>  getConnections(std::string srcconn);
         std::vector<std::string>  getReachableConnections(std::string srcconn);
+        std::vector<std::pair<std::string,std::string> >  getAllConnections();
 
         void clear();
 

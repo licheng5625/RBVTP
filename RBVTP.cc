@@ -79,30 +79,12 @@ void RBVTP::initConnctionsTable()
         //RBVTP_EV<<*iter<<endl;
         templane=templane.substr(0,7);
          myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
+         staticConnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
         //RBVTP_EV<<templane.substr(5,7)<<endl;
         }
     }
 }
-std::vector<std::string>  RBVTP::getConnOfRoad(std::string road)
-{
-    std::vector<std::string>  conn;
-    conn.push_back(road.substr(0,3));
-    conn.push_back(road.substr(5));
-    EV_LOG("RBVTP",road);
-    return conn;
-}
-bool  RBVTP::isRoadOfConn(std::string road,std::string conn)
-{
-    std::vector<std::string>  conns=getConnOfRoad(road);
-    if(std::find(conns.begin(),conns.end(),conn)!=conns.end())
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+
 void RBVTP::receiveChangeNotification(int category, const cObject *details)
 {
     EV_LOG("RBVTP","receiveChangeNotification");
@@ -130,7 +112,7 @@ void RBVTP::processSelfMessage(cMessage * message)
         processCPTimer(nextCPtimer);
     else{
         RBVTPPacket* mypacket=NULL;
-        mypacket =packetwaitinglist.getRBVTPPacket(message);
+        mypacket =check_and_cast<RBVTPPacket *>(packetwaitinglist.getcPacket(message));
        if (mypacket!=NULL)
        {
            processWaitingTimer(message,mypacket,packetwaitinglist.getDataPacket(message));
@@ -367,7 +349,7 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
 {
     double distence =(getConnectPosition(rbvtpPacket->getdesconn())-getSelfPosition()).length();
     rbvtpPacket->nexthop_ip=IPv4Address::UNSPECIFIED_ADDRESS;
-    if(distence<10)
+    if(distence<10)// close enough to the intersection
       {
         std::string srcconn=rbvtpPacket->getdesconn();
         std::vector <std::string> desconnlist=getConnections(srcconn);
@@ -382,6 +364,12 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
         sendQueuePacket((rbvtpPacket->getnexthopAddress()),rbvtpPacket->getroads(),rbvtpPacket->getsrcAddress());
       }
 }
+
+void RBVTP::findnextConn(std::string srcconn,ConnectionTable myconnectionTable)
+{
+    std::vector<std::string> listofnextconn=staticConnectionTable.getConnections(srcconn);
+
+ }
 INetfilter::IHook::Result RBVTP::datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry)
 {
     EV_LOG("RBVTR","datagramLocalInHook");

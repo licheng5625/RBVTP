@@ -17,8 +17,8 @@
 #include "RBVTP/ConnectionTable.h"
 #include "RBVTP/searchTable.h"
 #include "RBVTP/RTSwaitingtable.h"
-#include "RBVTP/BroadcastWaitingTable.h"
-#include "RBVTP/DelayPacketTable.h"
+#include "RouteInterface/BroadcastWaitingTable.h"
+#include "RouteInterface/DelayPacketTable.h"
 
 class INET_API RBVTP:public RouteInterface {
 public:
@@ -27,7 +27,7 @@ public:
   //  typedef std::map<IPvXAddress, int> RDPacketSeenlist;
 
 protected:
-    PacketWaitingTableforRBVTP packetwaitinglist;
+    PacketWaitingTable packetwaitinglist;
 
     double HoldingIndex ;
     double recPow;
@@ -47,10 +47,11 @@ protected:
     double a2;
     double a3;
 
-    DelayPacketTableforRBVTP delayPacketlist;
     IInterfaceTable *interfaceTable;
     SearchTable mysearchedtable;
     ConnectionTable myconnectionTable;
+    ConnectionTable staticConnectionTable;
+
     RTSWaitingTableforRBVTP RTSwaitinglist;
     void processSelfMessage(cMessage * message);
   //   void processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrlInfo){ return ; }
@@ -102,7 +103,6 @@ private:
     RBVTPPacket * createRTSPacket(RBVTPPacket *rbvtpPacket);
 
     void processCPTimer(simtime_t timer);
-    std::vector<std::string> getConnOfRoad(std::string road);
    // std::vector<std::vector<std::string>> RoutingTable;
 
     Coord  getConnectPosition(std::string conn);
@@ -118,8 +118,8 @@ private:
     void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
+    void findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
 
-    bool  isRoadOfConn(std::string road,std::string conn);
-};
+ };
 
 #endif /* RBVTRPACKET_H_ */

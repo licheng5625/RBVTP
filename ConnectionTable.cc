@@ -87,3 +87,12 @@ std::vector<std::string>  ConnectionTable::getReachableConnections(std::string s
            }
     return ret;
 }
+std::vector<std::pair<std::string,std::string> >  ConnectionTable::getAllConnections()
+{
+    vector<std::pair<std::string,std::string> > ret;
+    for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
+           {
+                   ret.push_back( it->first);
+           }
+    return ret;
+}
