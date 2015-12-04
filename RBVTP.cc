@@ -355,6 +355,7 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
         std::vector <std::string> desconnlist=getConnections(srcconn);
         Connectstate conn(Reachable);
         rbvtpPacket->myconnectionTable.addConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+        rbvtpPacket->myconnectionTable.addConnection(rbvtpPacket->getdesconn(),rbvtpPacket->getsrcconn(),conn);
         //rbvtpPacket->setdesconn()
         sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
       }
@@ -365,10 +366,33 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
       }
 }
 
-void RBVTP::findnextConn(std::string srcconn,ConnectionTable myconnectionTable)
+std::string RBVTP::findnextConn(std::string srcconn,std::string conntoreturn,ConnectionTable myconnectionTable)
 {
     std::vector<std::string> listofnextconn=staticConnectionTable.getConnections(srcconn);
-
+    if(listofnextconn.size()==0) //srcconn if is a virtual connection
+    {
+        return conntoreturn;
+    }
+    std::vector<std::string> listofcheckednextconn=myconnectionTable.getConnections(srcconn);
+    std::string desconn="";
+    for (int i=0;i<listofnextconn.size();i++)
+    {
+        if(std::find(listofcheckednextconn.begin(),listofcheckednextconn.end(),listofnextconn[i])==listofcheckednextconn.end())
+            {//find a link has never checked
+                if(desconn=="")
+                {
+                    desconn=listofnextconn[i];
+                }
+            }
+    }
+    if(desconn!="")
+    {
+        return desconn;
+    }
+    else
+    {
+       return conntoreturn;
+    }
  }
 INetfilter::IHook::Result RBVTP::datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry)
 {

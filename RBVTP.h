@@ -118,7 +118,7 @@ private:
     void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
-    void findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
+    std::string findnextConn(std::string srcconn,std::string conntoreturn,ConnectionTable myconnectionTable);
 
  };
 

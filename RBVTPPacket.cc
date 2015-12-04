@@ -29,6 +29,7 @@ Register_Class(RBVTPPacket);
 
 RBVTPPacket::RBVTPPacket(const char *name, int kind) : ::cPacket(name,kind)
 {   roads=std::vector<std::string>();
+    journal=std::vector<std::string>();
     // TODO Auto-generated constructor stub
 }
 RBVTPPacket::RBVTPPacket(const RBVTPPacket& other) : ::cPacket(other)
@@ -69,7 +70,7 @@ void RBVTPPacket::copy(const RBVTPPacket& other)
      this->lifeTime=other.lifeTime;
      this->src_Connection=other.src_Connection;
      this->des_Connection=other.des_Connection;
-
+     this->thisConnectionTable=other.thisConnectionTable;
 }
 
 void RBVTPPacket::parsimPack(cCommBuffer *b)
@@ -86,6 +87,7 @@ void RBVTPPacket::parsimPack(cCommBuffer *b)
     doPacking(b,this->lifeTime);
     doPacking(b,this->src_Connection);
     doPacking(b,this->des_Connection);
+    doPacking(b,this->thisConnectionTable);
 }
 
 void RBVTPPacket::parsimUnpack(cCommBuffer *b)
@@ -102,6 +104,8 @@ void RBVTPPacket::parsimUnpack(cCommBuffer *b)
     doUnpacking(b,this->lifeTime);
     doUnpacking(b,this->src_Connection);
     doUnpacking(b,this->des_Connection);
+    doUnpacking(b,this->thisConnectionTable);
+
 }
 
 IPvXAddress& RBVTPPacket::getsrcAddress()
@@ -174,7 +178,7 @@ std::vector<std::string>& RBVTPPacket::getroads(){
     return roads;
 }
 void RBVTPPacket::addroad(std::string road){
-    return roads.push_back(road);
+    roads.push_back(road);
 }
 std::string& RBVTPPacket::getroadsToStr(){
     std::string ret="";

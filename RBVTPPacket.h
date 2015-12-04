@@ -45,6 +45,8 @@ class INET_API RBVTPPacket: public cPacket {
     string src_Connection;
     unsigned int seqNum;
     std::vector<std::string> roads;
+    std::vector<std::string> journal;
+    ConnectionTable thisConnectionTable;
     simtime_t lifeTime;
 
 
