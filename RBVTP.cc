@@ -163,7 +163,7 @@ void RBVTP::processCPTimer(simtime_t timer)
     EV_LOG("RBVTP", "processCPTimer" );
     if(getHostName()=="host[3]"){
         RBVTPPacket *rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[0] ,getHostName());
-        rbvtpPacket->addjournal(getRoadID());
+        //rbvtpPacket->addjournal(getRoadID());
         sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
         EV_LOG("RBVTP", "Scheduling RU timer" );
         scheduleAt(simTime() + timer, CPTimer);
@@ -179,17 +179,19 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
     EV_LOG("RBVTP", "processRTSTimeOutTimer" );
     cout<<timer<<endl;
     RBVTPPacket *rbvtpPacket=(check_and_cast<RBVTPPacket *>(RTSpacketwaitinglist.getcPacket(timer)))->dup();
+    RBVTP_EV<<"getjournal size: "<<rbvtpPacket->getjournal().size()<<endl;
+    EV<<rbvtpPacket->getjournal().size()<<endl;
     for (int i=0;i<rbvtpPacket->getjournal().size();i++)
     {
         EV_LOG("RBVTP", rbvtpPacket->getjournal()[i]);
     }
 
-    rbvtpPacket->getlastjournal();
+    //rbvtpPacket->getlastjournal();
     Connectstate conn(Unreachable);
-    rbvtpPacket->myconnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+    rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
     std::string nexthopconn="";
     std::string srcconn=rbvtpPacket->getsrcconn();
-    nexthopconn=findnextConn(srcconn,  rbvtpPacket->myconnectionTable);
+    nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
    if(nexthopconn==srcconn)
    {
        if(srcconn==rbvtpPacket->getjournal().front()&&rbvtpPacket->getjournal().size()==1)
@@ -206,6 +208,16 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
        rbvtpPacket->addjournal(nexthopconn);
     }
    rbvtpPacket->setdesconn(nexthopconn);
+   if(nexthopconn.size()==3)
+   {
+       rbvtpPacket->setdesPosition(getConnectPosition(nexthopconn));
+   }
+   else
+   {
+       rbvtpPacket->setdesPosition(rbvtpPacket->getscrPosition());
+   }
+   RBVTP_EV<<"send CP to"<<nexthopconn<<endl;
+   std::cout<<"send CP to"<<nexthopconn<<endl;
    sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
   }
 
@@ -247,6 +259,8 @@ INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, c
            return ACCEPT;
        }
            else {
+               EV_LOG("RBVTP","check rbvtppacket");
+
                RBVTPPacket * rbvtppacket=check_and_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
                if ( rbvtppacket !=NULL)
                {
@@ -425,10 +439,12 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
     if(distence<300)// close enough to the intersection
       {
         RBVTP_EV<<"close to "<<srcconn<<"   "<<distence<<endl;
+        RBVTP_EV<<"add journal "<<nexthopconn<<endl;
+        rbvtpPacket->addjournal(srcconn);
        // std::vector <std::string> desconnlist=getConnections(srcconn);
         Connectstate conn(Reachable);
-        rbvtpPacket->myconnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
-        nexthopconn=findnextConn(srcconn,  rbvtpPacket->myconnectionTable);
+        rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+        nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
         if(nexthopconn==srcconn)
         {
             if(srcconn==rbvtpPacket->getjournal().front()&&rbvtpPacket->getjournal().size()==1)
@@ -441,7 +457,12 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
             }
         }else
         {
+            RBVTP_EV<<"add journal "<<nexthopconn<<endl;
             rbvtpPacket->addjournal(nexthopconn);
+            for(int j=0;j<(rbvtpPacket->getjournal().size());j++)
+            {
+                RBVTP_EV<<" journal: "<<rbvtpPacket->getjournal()[j]<<endl;
+            }
         }
       }
     else
@@ -457,14 +478,14 @@ std::string RBVTP::findnextConn(std::string srcconn,ConnectionTable myconnection
     std::vector<std::string> listofnextconn=staticConnectionTable.getConnections(srcconn);
     if(listofnextconn.size()==0) //srcconn if is a virtual connection
     {
+        RBVTP_EV<<srcconn<<" has no nexthop!"<<endl;
         return srcconn;
     }
     std::vector<std::string> listofcheckednextconn=myconnectionTable.getConnections(srcconn);
     std::string desconn="";
     for (int i=0;i<listofnextconn.size();i++)
        {
-        EV_LOG("RBVTR","nexthop:  "+listofnextconn[i]);
-
+        RBVTP_EV<<srcconn<<" to nexthop:  "<<listofnextconn[i]<<endl;
        }
     for (int i=0;i<listofnextconn.size();i++)
     {
