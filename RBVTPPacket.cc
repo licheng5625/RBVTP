@@ -67,6 +67,7 @@ void RBVTPPacket::copy(const RBVTPPacket& other)
      this->des_position= other.des_position;
      this->seqNum= other.seqNum;
      this->roads= other.roads;
+     this->journal= other.journal;
      this->lifeTime=other.lifeTime;
      this->src_Connection=other.src_Connection;
      this->des_Connection=other.des_Connection;
@@ -84,6 +85,7 @@ void RBVTPPacket::parsimPack(cCommBuffer *b)
     doPacking(b,this->des_position);
     doPacking(b,this->seqNum);
     doPacking(b,this->roads);
+    doPacking(b,this->journal);
     doPacking(b,this->lifeTime);
     doPacking(b,this->src_Connection);
     doPacking(b,this->des_Connection);
@@ -101,6 +103,7 @@ void RBVTPPacket::parsimUnpack(cCommBuffer *b)
     doUnpacking(b,this->des_position);
     doUnpacking(b,this->seqNum);
     doUnpacking(b,this->roads);
+    doUnpacking(b,this->journal);
     doUnpacking(b,this->lifeTime);
     doUnpacking(b,this->src_Connection);
     doUnpacking(b,this->des_Connection);
@@ -179,6 +182,21 @@ std::vector<std::string>& RBVTPPacket::getroads(){
 }
 void RBVTPPacket::addroad(std::string road){
     roads.push_back(road);
+}
+
+void RBVTPPacket::setjournal(std::vector<std::string> myjournal)
+{
+    journal=myjournal;
+}
+std::vector<std::string>& RBVTPPacket::getjournal(){
+    return journal;
+}
+void RBVTPPacket::addjournal(std::string hostid){
+    journal.push_back(hostid);
+}
+std::string& RBVTPPacket::getlastjournal(){
+    journal.pop_back();
+    return journal.back();
 }
 std::string& RBVTPPacket::getroadsToStr(){
     std::string ret="";

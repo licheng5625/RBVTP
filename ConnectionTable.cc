@@ -39,7 +39,16 @@ void ConnectionTable::addConnection(std::string roadsrc,std::string roaddes,Conn
      Connection conn=std::pair<std::string ,std::string >(roadsrc, roaddes);
      connectionstable[conn]=connstate;
 }
-
+void ConnectionTable::addTwoWayConnection(std::string roadsrc,std::string roaddes)
+{
+    addConnection(roadsrc,roaddes);
+    addConnection(roaddes,roadsrc);
+}
+void ConnectionTable::addTwoWayConnection(std::string roadsrc,std::string roaddes,Connectstate conn)
+{
+    addConnection(roadsrc,roaddes,conn);
+    addConnection(roaddes,roadsrc,conn);
+}
 bool ConnectionTable::hasConnect(std::string roadsrc)   {
     for (Connectiontable::const_iterator it = connectionstable.begin(); it != connectionstable.end(); it++)
        {

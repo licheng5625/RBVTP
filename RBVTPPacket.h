@@ -89,6 +89,10 @@ public:
    virtual  std::string& getdesconn();
    virtual void setdesconn(std::string myroads);
    virtual std::string&  getroadsToStr();
+   virtual void  setjournal(std::vector<std::string> myjournal);
+   virtual std::vector<std::string>& getjournal() ;
+   virtual void addjournal(std::string hostid) ;
+   virtual std::string&   getlastjournal() ;
    ConnectionTable myconnectionTable;
 
 };

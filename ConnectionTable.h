@@ -60,7 +60,8 @@ class INET_API ConnectionTable {
         std::vector<std::string>  getConnections(std::string srcconn);
         std::vector<std::string>  getReachableConnections(std::string srcconn);
         std::vector<std::pair<std::string,std::string> >  getAllConnections();
-
+        void addTwoWayConnection(std::string roadsrc,std::string roaddes);
+        void addTwoWayConnection(std::string roadsrc,std::string roaddes,Connectstate conn);
         void clear();
 
 };

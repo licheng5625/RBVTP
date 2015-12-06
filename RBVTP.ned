@@ -35,11 +35,12 @@ simple RBVTP
       
         string interfaces = default("*");
 		double HoldingIndex  =default(1);
-		double RDliftime @unit("s") = default(20s); 
+		double CPliftime @unit("s") = default(20s); 
 	    double RUliftime @unit("s") = default(20s); 
 		double RRliftime @unit("s") = default(20s); 
 		double DATAliftime @unit("s") = default(20s); 
 		double nextRUtimer @unit("s") = default(5s); 
+		double RTSTimeout @unit("s") = default(3s); 
 		double Tmax  @unit("s") = default(0.5s);
     	double dopt @unit("m") = default(400m); 
    		double dmax @unit("m") = default(800m); 

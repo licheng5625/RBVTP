@@ -28,16 +28,19 @@ public:
 
 protected:
     PacketWaitingTable packetwaitinglist;
+    PacketWaitingTable RTSpacketwaitinglist;
 
     double HoldingIndex ;
     double recPow;
-    simtime_t RDliftime;
+    simtime_t CPliftime;
     simtime_t RRliftime;
     simtime_t RUliftime;
     simtime_t DATAliftime;
     simtime_t nextCPtimer;
+    simtime_t RTSTimeout;
+
     cMessage * CPTimer;
-    cMessage * WaitingCTSTimer;
+    cMessage * RTSTimeOutTimer;
 
     double Tmax;
     double dopt;
@@ -103,11 +106,13 @@ private:
     RBVTPPacket * createRTSPacket(RBVTPPacket *rbvtpPacket);
 
     void processCPTimer(simtime_t timer);
+    void processRTSTimeOutTimer(cMessage* timer);
+
    // std::vector<std::vector<std::string>> RoutingTable;
 
     Coord  getConnectPosition(std::string conn);
     std::vector<std::string>  getConnections(std::string srcconn);
-    void BroadcastRTS(RBVTPPacket * rbvtpPacket);
+    RBVTPPacket * BroadcastRTS(RBVTPPacket * rbvtpPacket);
     void processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrlInfo);
     void processRTSPACKET(RBVTPPacket * rbvtpPacket);
     void processCTSPACKET(RBVTPPacket * rbvtrPacket);
@@ -118,7 +123,7 @@ private:
     void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
-    std::string findnextConn(std::string srcconn,std::string conntoreturn,ConnectionTable myconnectionTable);
+    std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
 
  };
 
