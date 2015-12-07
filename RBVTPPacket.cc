@@ -64,6 +64,7 @@ void RBVTPPacket::copy(const RBVTPPacket& other)
      this->des_ip= other.des_ip;
      this->nexthop_ip= other.nexthop_ip;
      this->src_position= other.src_position;
+     this->lastsender_ip= other.lastsender_ip;
      this->des_position= other.des_position;
      this->seqNum= other.seqNum;
      this->roads= other.roads;
@@ -80,6 +81,7 @@ void RBVTPPacket::parsimPack(cCommBuffer *b)
     doPacking(b,this->packetTpye_var);
     doPacking(b,this->src_ip);
     doPacking(b,this->des_ip);
+    doPacking(b,this->lastsender_ip);
     doPacking(b,this->nexthop_ip);
     doPacking(b,this->src_position);
     doPacking(b,this->des_position);
@@ -98,6 +100,7 @@ void RBVTPPacket::parsimUnpack(cCommBuffer *b)
     doUnpacking(b,this->packetTpye_var);
     doUnpacking(b,this->src_ip);
     doUnpacking(b,this->des_ip);
+    doUnpacking(b,this->lastsender_ip);
     doUnpacking(b,this->nexthop_ip);
     doUnpacking(b,this->src_position);
     doUnpacking(b,this->des_position);
@@ -124,6 +127,15 @@ void RBVTPPacket::setsrcAddress(const IPvXAddress& address)
 IPvXAddress& RBVTPPacket::getdesAddress()
 {
     return des_ip;
+}
+void RBVTPPacket::setlastsenderAddress(const IPvXAddress& address)
+{
+    this->lastsender_ip = address;
+}
+
+IPvXAddress& RBVTPPacket::getlastsenderAddress()
+{
+    return lastsender_ip;
 }
 
 void RBVTPPacket::setdesAddress(const IPvXAddress& address)
@@ -194,8 +206,10 @@ std::vector<std::string>& RBVTPPacket::getjournal(){
 void RBVTPPacket::addjournal(std::string hostid){
     journal.push_back(hostid);
 }
-std::string& RBVTPPacket::getlastjournal(){
-    journal.pop_back();
+std::string& RBVTPPacket::getlastjournal(bool ispop){
+    if(ispop){
+        journal.pop_back();
+    }
     return journal.back();
 }
 std::string& RBVTPPacket::getroadsToStr(){

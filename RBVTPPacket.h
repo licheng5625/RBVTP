@@ -38,6 +38,7 @@ class INET_API RBVTPPacket: public cPacket {
     RBVTPPacketType packetTpye_var;
     IPvXAddress src_ip;
     IPvXAddress des_ip;
+    IPvXAddress lastsender_ip;
 
     Coord src_position;
     Coord des_position;
@@ -76,8 +77,8 @@ public:
 
    virtual simtime_t &  getLifetime();
    virtual void  setLifetime(simtime_t mylifetime);
-
-
+   virtual void setlastsenderAddress(const IPvXAddress& address);
+   virtual IPvXAddress& getlastsenderAddress();
    virtual unsigned int& getSeqnum();
    virtual std::vector<std::string>& getroads();
    virtual void setroads(std::vector<std::string> myroads);
@@ -91,7 +92,7 @@ public:
    virtual void  setjournal(std::vector<std::string> myjournal);
    virtual std::vector<std::string>& getjournal() ;
    virtual void addjournal(std::string hostid) ;
-   virtual std::string&   getlastjournal() ;
+   virtual std::string&   getlastjournal(bool ispop) ;
    ConnectionTable thisConnectionTable;
 
 };

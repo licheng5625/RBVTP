@@ -78,7 +78,7 @@ void RBVTP::initConnctionsTable()
         if(templane.length()==10)
         {
         //RBVTP_EV<<*iter<<endl;
-        templane=templane.substr(0,8);
+         templane=templane.substr(0,8);
          myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
          EV_LOG("RBVTP","add conn to static   :"+getConnOfRoad(templane)[0]+"  to  "+getConnOfRoad(templane)[1]);
 
@@ -86,6 +86,8 @@ void RBVTP::initConnctionsTable()
         //RBVTP_EV<<templane.substr(5,7)<<endl;
         }
     }
+   // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[0]);
+   // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1]);
 }
 
 void RBVTP::receiveChangeNotification(int category, const cObject *details)
@@ -187,26 +189,45 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
     }
 
     //rbvtpPacket->getlastjournal();
+    std::string srcconn=rbvtpPacket->getlastjournal(false);
     Connectstate conn(Unreachable);
-    rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+    rbvtpPacket->thisConnectionTable.addTwoWayConnection(srcconn,rbvtpPacket->getdesconn(),conn);
     std::string nexthopconn="";
-    std::string srcconn=rbvtpPacket->getsrcconn();
-    nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
-   if(nexthopconn==srcconn)
-   {
-       if(srcconn==rbvtpPacket->getjournal().front()&&rbvtpPacket->getjournal().size()==1)
+    if(nexthopconn.size()==3)
        {
-           RBVTP_EV<<"end of CP"<<endl;
-           return ;
-       }
-       else
+        nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
+        if(nexthopconn==srcconn)
+           {
+            nexthopconn=srcconn;
+            }else
+            {
+              // rbvtpPacket->addjournal(nexthopconn);
+            }
+       }else//send to src
        {
-          nexthopconn=rbvtpPacket->getlastjournal();
+           if(getSelfIPAddress()==rbvtpPacket->getsrcAddress().get4())
+                 {
+                     if(rbvtpPacket->thisConnectionTable.getConnections(srcconn).size()==2)
+                     {
+                         RBVTP_EV<<"end of CP"<<endl;
+                         return ;
+                     }else
+                     {
+                       if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getConnOfRoad(srcconn)[0])
+                       {
+                           nexthopconn=   getConnOfRoad(srcconn)[0];
+                       }else
+                       {
+                           nexthopconn=   getConnOfRoad(srcconn)[1];
+                       }
+                     }
+                 }
+                 else
+                 {
+                    nexthopconn=srcconn;
+                 }
        }
-    }else
-    {
-       rbvtpPacket->addjournal(nexthopconn);
-    }
+
    rbvtpPacket->setdesconn(nexthopconn);
    if(nexthopconn.size()==3)
    {
@@ -218,6 +239,7 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
    }
    RBVTP_EV<<"send CP to"<<nexthopconn<<endl;
    std::cout<<"send CP to"<<nexthopconn<<endl;
+   rbvtpPacket->setlastsenderAddress(getSelfIPAddress());
    sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
   }
 
@@ -366,6 +388,7 @@ RBVTPPacket *RBVTP::createCPPacket(std::string scrconn,  std::string desconn,  s
     rBVTPPacket->setsrcconn(scrconn);
     rBVTPPacket->setLifetime(simTime()+CPliftime);
     rBVTPPacket->addjournal(scrconn);
+    rBVTPPacket->setlastsenderAddress(getSelfIPAddress());
     squmCP++;
    // rBVTPPacket->encapsulate(content);
     return rBVTPPacket;
@@ -373,7 +396,7 @@ RBVTPPacket *RBVTP::createCPPacket(std::string scrconn,  std::string desconn,  s
 
 void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
 {
-    if(rbvtpPacket->getsrcAddress()!=getSelfIPAddress())
+    if(rbvtpPacket->getlastsenderAddress()!=getSelfIPAddress())
     {
           std::vector <std::string> routingroad=rbvtpPacket->getroads();
           std::string name=rbvtpPacket->getName();
@@ -384,12 +407,15 @@ void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
               RBVTP_EV<<"RTSSEEN:"<<RSTSeenlist[i]<<endl;
           }*/
           RBVTP_EV<<"myRoadia"<<getRoadID()<<"    desconn::"<<rbvtpPacket->getdesconn()<<"  "<<isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn())<<endl;
-          if((isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),(name))==RSTSeenlist.end()))
+          if(((isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn()))||(getRoadID()==rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),(name))==RSTSeenlist.end()))
           {
                 RBVTP_EV<<"got RTS IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
                 RBVTPPacket *ctspacket=  createCTSPacket( rbvtpPacket);
                 scheduleReBoardcastTimer(CaculateHoldTime(ctspacket->getscrPosition(),ctspacket->getdesPosition()),ctspacket,NULL);
                 RSTSeenlist.push_back(name);
+          }else
+          {
+              RBVTP_EV<<"drop RTS IP:"<<endl;
           }
     }
 }
@@ -432,11 +458,17 @@ void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
 
 void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
 {
-    double distence =(getConnectPosition(rbvtpPacket->getdesconn())-getSelfPosition()).length();
-    rbvtpPacket->nexthop_ip=IPv4Address::UNSPECIFIED_ADDRESS;
     std::string srcconn=rbvtpPacket->getdesconn();
+    double distence ;
+    if(srcconn.size()==3){
+        distence= (getConnectPosition(rbvtpPacket->getdesconn())-getSelfPosition()).length();
+    }else
+    {
+        distence=0;
+    }
+    rbvtpPacket->nexthop_ip=IPv4Address::UNSPECIFIED_ADDRESS;
     string nexthopconn;
-    if(distence<300)// close enough to the intersection
+    if(distence<50)// close enough to the intersection
       {
         RBVTP_EV<<"close to "<<srcconn<<"   "<<distence<<endl;
         RBVTP_EV<<"add journal "<<nexthopconn<<endl;
@@ -447,18 +479,31 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
         nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
         if(nexthopconn==srcconn)
         {
-            if(srcconn==rbvtpPacket->getjournal().front()&&rbvtpPacket->getjournal().size()==1)
-            {
-                RBVTP_EV<<"end of CP"<<endl;
-                return ;
-            }else
-            {
-                nexthopconn=rbvtpPacket->getlastjournal();
-            }
+          if(getSelfIPAddress()==rbvtpPacket->getsrcAddress().get4())
+                {
+                    if(rbvtpPacket->thisConnectionTable.getConnections(srcconn).size()==2)
+                    {
+                        RBVTP_EV<<"end of CP"<<endl;
+                        return ;
+                    }else
+                    {
+                      if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getConnOfRoad(srcconn)[0])
+                      {
+                          nexthopconn=   getConnOfRoad(srcconn)[0];
+                      }else
+                      {
+                          nexthopconn=   getConnOfRoad(srcconn)[1];
+                      }
+                    }
+                }
+                else
+                {
+                    nexthopconn=rbvtpPacket->getlastjournal(true);
+                }
         }else
         {
-            RBVTP_EV<<"add journal "<<nexthopconn<<endl;
-            rbvtpPacket->addjournal(nexthopconn);
+            /*RBVTP_EV<<"add journal "<<nexthopconn<<endl;
+            rbvtpPacket->addjournal(nexthopconn);*/
             for(int j=0;j<(rbvtpPacket->getjournal().size());j++)
             {
                 RBVTP_EV<<" journal: "<<rbvtpPacket->getjournal()[j]<<endl;
@@ -470,6 +515,7 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
         nexthopconn=srcconn;
       }
     rbvtpPacket->setdesconn(nexthopconn);
+    RBVTP_EV<<" send cp tp: "<<nexthopconn<<endl;
     sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
 }
 
