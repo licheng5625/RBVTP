@@ -195,6 +195,7 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
     //rbvtpPacket->getlastjournal();
     std::string srcconn=rbvtpPacket->getlastjournal(false);
     Connectstate conn(Unreachable);
+    RBVTP_EV<<"add Connection "<<srcconn<<" to "<<rbvtpPacket->getdesconn()<<" UnReachable "<<endl;
     rbvtpPacket->thisConnectionTable.addTwoWayConnection(srcconn,rbvtpPacket->getdesconn(),conn);
     std::string nexthopconn="";
     if(nexthopconn.size()==3)
@@ -489,10 +490,14 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
       {
         RBVTP_EV<<"close to "<<srcconn<<"   "<<distence<<endl;
         RBVTP_EV<<"add journal "<<nexthopconn<<endl;
+        string lastconn=rbvtpPacket->getlastjournal(false);
         rbvtpPacket->addjournal(srcconn);
        // std::vector <std::string> desconnlist=getConnections(srcconn);
-        Connectstate conn(Reachable);
-        rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getlastjournal(false),srcconn,conn);
+        if(lastconn!=srcconn){
+            Connectstate conn(Reachable);
+            RBVTP_EV<<"add Connection "<<lastconn<<" to "<<srcconn<<" Reachable "<<endl;
+            rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getlastjournal(false),srcconn,conn);
+        }
         nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
         if(nexthopconn==srcconn)
         {
@@ -502,6 +507,10 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
                   RBVTP_EV<<nexthopconn<<" is the src"<<endl;
                     if(rbvtpPacket->thisConnectionTable.getConnections(srcconn).size()==2)
                     {
+                        for (int i=0;i<2;i++)
+                        {
+                            RBVTP_EV<<"checked all conn of src"<<rbvtpPacket->thisConnectionTable.getConnections(srcconn)[i]<<endl;
+                        }
                         RBVTP_EV<<"end of CP"<<endl;
                         return ;
                     }else
