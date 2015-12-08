@@ -9,7 +9,6 @@
 #define RBVTP_EV EV << "RBVTP at " << getHostName() << " "
 #include "TraCIMobility.h"
 #include "Radio80211aControlInfo_m.h"
-
 Define_Module(RBVTP);
 
 RBVTP::RBVTP(){
@@ -63,6 +62,7 @@ void RBVTP::initialize( int stage){
         {
             RBVTP_EV<<*iter<<"   "<<tracimanager->commandGetJunctionPosition(*iter)<<endl;
         }*/
+        globlePositionTable.setHostName(getSelfIPAddress(),getHostName());
         initConnctionsTable();
         nb->subscribe(this, NF_LINK_FULL_PROMISCUOUS);
         scheduleAt(simTime() + nextCPtimer, CPTimer);
@@ -116,14 +116,18 @@ void RBVTP::processSelfMessage(cMessage * message)
        // case RTSTimeOutTimer:
         //    processRTSTimeOutTimer(nextCPtimer);
         //    break;
+    EV_LOG("RBVTP", "processSelfMessage" );
+    RBVTP_EV<<"processSelfMessage  "<<message->getName()<<endl;
 
     if (message == CPTimer)
         {
+            EV_LOG("RBVTR", "process  CPTimer" );
             processCPTimer(nextCPtimer);
             return ;
         }
-    if (message == RTSTimeOutTimer)
+    if (std::string(message->getName()) == "RTSTimeOutTimer")
        {
+           EV_LOG("RBVTR", "process  RTSTimeOutTimer" );
            processRTSTimeOutTimer(message);
            return ;
        }
@@ -132,7 +136,7 @@ void RBVTP::processSelfMessage(cMessage * message)
    if (mypacket!=NULL)
    {
        processWaitingTimer(message,mypacket,packetwaitinglist.getDataPacket(message));
-       clearMessage(message,mypacket);
+       clearMessage(message,mypacket,packetwaitinglist);
    }
 
 }
@@ -168,7 +172,7 @@ void RBVTP::processCPTimer(simtime_t timer)
         //rbvtpPacket->addjournal(getRoadID());
         sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
         EV_LOG("RBVTP", "Scheduling RU timer" );
-        scheduleAt(simTime() + timer, CPTimer);
+        //scheduleAt(simTime() + timer, CPTimer);
     }
     else
     {
@@ -179,7 +183,7 @@ void RBVTP::processCPTimer(simtime_t timer)
 void RBVTP::processRTSTimeOutTimer(cMessage* timer)
 {
     EV_LOG("RBVTP", "processRTSTimeOutTimer" );
-    cout<<timer<<endl;
+    cout<<getHostName()<<"  timer "<<timer<<endl;
     RBVTPPacket *rbvtpPacket=(check_and_cast<RBVTPPacket *>(RTSpacketwaitinglist.getcPacket(timer)))->dup();
     RBVTP_EV<<"getjournal size: "<<rbvtpPacket->getjournal().size()<<endl;
     EV<<rbvtpPacket->getjournal().size()<<endl;
@@ -237,8 +241,16 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
    {
        rbvtpPacket->setdesPosition(rbvtpPacket->getscrPosition());
    }
-   RBVTP_EV<<"send CP to"<<nexthopconn<<endl;
-   std::cout<<"send CP to"<<nexthopconn<<endl;
+    string packetname=rbvtpPacket->getName();
+    RBVTP_EV<<"delete packet "<<packetname<<endl;
+   delayPacketlist.removePacket(rbvtpPacket->getdesAddress(),packetname);
+   cout<<"delete packet "<<packetname<<endl;
+
+   RTSpacketwaitinglist.removePacket(timer);
+   cout<<"delete timer "<<packetname<<endl;
+
+   RBVTP_EV<<"send CP to"<<rbvtpPacket->getdesconn()<<endl;
+   std::cout<<"send CP to"<<rbvtpPacket->getdesconn()<<endl;
    rbvtpPacket->setlastsenderAddress(getSelfIPAddress());
    sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
   }
@@ -290,8 +302,9 @@ INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, c
                    if(rbvtppacket->getPacketType()==RBVTP_CP)
                    {
                        RBVTPPacket * rtspacket=BroadcastRTS(rbvtppacket);
-                       RTSTimeOutTimer = new cMessage("RTSTimeOutTimer");
-                       RTSpacketwaitinglist.addPacket(RTSTimeOutTimer,rbvtppacket,NULL);
+                       cMessage* RTSTimeOutTimer = new cMessage("RTSTimeOutTimer");
+                       cout<<getHostName()<<"add  timer "<<RTSTimeOutTimer<<endl;
+                       RTSpacketwaitinglist.addPacket(RTSTimeOutTimer,rbvtppacket,datagram);
                        scheduleAt(simTime() + RTSTimeout, RTSTimeOutTimer);
                        // return QUEUE;
                    }
@@ -421,15 +434,16 @@ void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
 }
 void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
 {
+    std::cout<<"processCTSPACKET"<<endl;
     if(rbvtpPacket->getdesAddress()!=getSelfIPAddress())
       {
         cMessage *mymsg=NULL;
-        mymsg=packetwaitinglist.findPacket(rbvtpPacket);
         std::string name=rbvtpPacket->getName();
         //RSTSeenlist.push_back(name.substr(3));
          if(mymsg!=NULL)
          {
-          clearMessage(mymsg,rbvtpPacket);
+          clearMessage(mymsg,rbvtpPacket,packetwaitinglist);
+          std::cout<<"cancel ctspacket IP:"<<rbvtpPacket->getdesAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
           RBVTP_EV<<"cancel ctspacket IP:"<<rbvtpPacket->getdesAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
          }
       }
@@ -444,13 +458,15 @@ void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
            cMessage* timer= RTSpacketwaitinglist.findPacket(packetname);
            if (timer!=NULL)
            {
-               cancelAndDelete(timer);
+               clearMessage(timer,check_and_cast<RBVTPPacket*>(RTSpacketwaitinglist.getcPacket(timer)),RTSpacketwaitinglist);
+               //cancelAndDelete(timer);
            }
            else
            {
                throw cRuntimeError("can't find RTSWaiting Timer");
            }
         }
+        std::cout<<"send packets IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
         RBVTP_EV<<"send packets IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
         sendQueuePacket((rbvtpPacket->getnexthopAddress()),rbvtpPacket->getroads(),rbvtpPacket->getsrcAddress());
       }
@@ -459,9 +475,10 @@ void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
 void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
 {
     std::string srcconn=rbvtpPacket->getdesconn();
+    RBVTP_EV<<"receive CPPACKET from "<<globlePositionTable.getHostName(rbvtpPacket->getlastsenderAddress()) <<" with des "<<srcconn<<endl;
     double distence ;
     if(srcconn.size()==3){
-        distence= (getConnectPosition(rbvtpPacket->getdesconn())-getSelfPosition()).length();
+        distence= (getConnectPosition(srcconn)-getSelfPosition()).length();
     }else
     {
         distence=0;
@@ -475,32 +492,37 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
         rbvtpPacket->addjournal(srcconn);
        // std::vector <std::string> desconnlist=getConnections(srcconn);
         Connectstate conn(Reachable);
-        rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getsrcconn(),rbvtpPacket->getdesconn(),conn);
+        rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->getlastjournal(false),srcconn,conn);
         nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
         if(nexthopconn==srcconn)
         {
+          RBVTP_EV<<"can't find next for"<<nexthopconn<<endl;
           if(getSelfIPAddress()==rbvtpPacket->getsrcAddress().get4())
                 {
+                  RBVTP_EV<<nexthopconn<<" is the src"<<endl;
                     if(rbvtpPacket->thisConnectionTable.getConnections(srcconn).size()==2)
                     {
                         RBVTP_EV<<"end of CP"<<endl;
                         return ;
                     }else
                     {
+                        RBVTP_EV<<"src got pacekt return from "<<getConnOfRoad(srcconn)[0]<<endl;
+
                       if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getConnOfRoad(srcconn)[0])
                       {
-                          nexthopconn=   getConnOfRoad(srcconn)[0];
+                          nexthopconn=   getConnOfRoad(srcconn)[1];
                       }else
                       {
-                          nexthopconn=   getConnOfRoad(srcconn)[1];
+                          nexthopconn=   getConnOfRoad(srcconn)[0];
                       }
                     }
                 }
                 else
                 {
+                    RBVTP_EV<<nexthopconn<<" is not the src"<<"my ip "<<getSelfIPAddress()<<"src of packet "<<rbvtpPacket->getsrcAddress().get4()<<endl;
                     nexthopconn=rbvtpPacket->getlastjournal(true);
                 }
-        }else
+        }else //find a next hop
         {
             /*RBVTP_EV<<"add journal "<<nexthopconn<<endl;
             rbvtpPacket->addjournal(nexthopconn);*/
@@ -512,8 +534,10 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
       }
     else
       {
+        RBVTP_EV<<" too far to: "<<srcconn<< "  "<<distence<<endl;
         nexthopconn=srcconn;
       }
+    rbvtpPacket->setlastsenderAddress(getSelfIPAddress());
     rbvtpPacket->setdesconn(nexthopconn);
     RBVTP_EV<<" send cp tp: "<<nexthopconn<<endl;
     sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
@@ -574,7 +598,7 @@ INetfilter::IHook::Result RBVTP::datagramLocalInHook(IPv4Datagram * datagram, co
 void RBVTP::sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop)
 {
     RBVTP_EV << "Completing route discovery, originator " << getSelfIPAddress() << ", target " << target <<", nexthop: " <<nexthop<< endl;
-    std::multimap<IPvXAddress, IPv4Datagram *>::iterator lt = delayPacketlist.getlowbound(target);
+    std::multimap<IPvXAddress, IPv4Datagram *>::iterator lt = delayPacketlist.getlowerbound(target);
     std::multimap<IPvXAddress, IPv4Datagram *>::iterator ut = delayPacketlist.getupperbound(target);
     RBVTPPacket * rbvtrdataPacket;
     // reinject the delayed datagrams
@@ -614,6 +638,9 @@ RBVTPPacket *RBVTP::createRTSPacket(RBVTPPacket *rbvtpPacket)
     std::string packetname=rbvtpPacket->getName();
   //  std::string packettype="RD_";
     //packetname=packetname.replace(packetname.begin(),packetname.begin()+2,"RTS");
+   // stringstream convert; // stringstream used for the conversion
+   // convert << squmRTS++;//add the value of Number to the characters in the stream
+   // packetname="RTS_"+packetname+"_"+convert.str();
     packetname="RTS_"+packetname+"_"+std::to_string(squmRTS++);
     RBVTPPacket * RTSPacket = new RBVTPPacket(packetname.c_str());
     //std::cout <<"rbvtpPacket-getName = " << rbvtpPacket(strcat("RD_",content->getName())) << endl;
@@ -651,10 +678,14 @@ RBVTPPacket *RBVTP::createCTSPacket(RBVTPPacket *rbvtpPacket)
    // rBVTRPacket->encapsulate(content);
     return CTSPacket;
 }
-void RBVTP::clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket)
+void RBVTP::clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable packetwaitinglist)
 {
+     std::cout<<"clearMessage"<<endl;
      packetwaitinglist.removePacket(message);
-     cancelAndDelete(message);
+     if(message->isSelfMessage())
+     {
+         cancelAndDelete(message);
+     }
      networkProtocol->dropQueuedDatagram(dynamic_cast<const IPv4Datagram *>(rbvtpPacket));
  }
 

@@ -14,11 +14,12 @@
 #include "IPSocket.h"
 #include "TraCIScenarioManager.h"
 #include <algorithm>
+#include <string>
 #include "RBVTP/ConnectionTable.h"
-#include "RBVTP/searchTable.h"
+#include "RBVTP/searchtable.h"
 #include "RBVTP/RTSwaitingtable.h"
-#include "RouteInterface/BroadcastWaitingTable.h"
-#include "RouteInterface/DelayPacketTable.h"
+#include "routeInterface/BroadcastWaitingTable.h"
+#include "routeInterface/DelayPacketTable.h"
 
 class INET_API RBVTP:public RouteInterface {
 public:
@@ -40,7 +41,7 @@ protected:
     simtime_t RTSTimeout;
 
     cMessage * CPTimer;
-    cMessage * RTSTimeOutTimer;
+    //cMessage * RTSTimeOutTimer;
 
     double Tmax;
     double dopt;
@@ -120,7 +121,7 @@ private:
     simtime_t CaculateHoldTime(Coord srcPosition,Coord desPosition);
     simtime_t CaculateHoldTime(Coord srcPosition);
     void scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram);
-    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket);
+    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable packetwaitinglist);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
     std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
