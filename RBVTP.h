@@ -125,7 +125,7 @@ private:
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
     std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
-    std::string getNamefromRTS(std::string rtsName);
+
  };
 
 #endif /* RBVTRPACKET_H_ */
