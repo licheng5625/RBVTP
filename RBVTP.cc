@@ -407,7 +407,12 @@ RBVTPPacket *RBVTP::createCPPacket(std::string scrconn,  std::string desconn,  s
    // rBVTPPacket->encapsulate(content);
     return rBVTPPacket;
 }
-
+std::string RBVTP::getNamefromRTS(std::string rtsName)
+{
+    rtsName=rtsName.substr(12);
+    rtsName=rtsName.substr(0,rtsName.rfind("_"));
+    return rtsName;
+}
 void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
 {
     if(rbvtpPacket->getlastsenderAddress()!=getSelfIPAddress())
@@ -450,9 +455,7 @@ void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
       }
     else
       {
-        string packetname=rbvtpPacket->getName();
-        packetname=packetname.substr(4);
-        packetname=packetname.substr(0,packetname.rfind("_"));
+        string packetname=getNamefromRTS(rbvtpPacket->getName());
         RBVTP_EV<<"packetname"<<packetname<<endl;
         if(packetname.find("CP")!=-1)
         {
@@ -650,7 +653,7 @@ RBVTPPacket *RBVTP::createRTSPacket(RBVTPPacket *rbvtpPacket)
    // stringstream convert; // stringstream used for the conversion
    // convert << squmRTS++;//add the value of Number to the characters in the stream
    // packetname="RTS_"+packetname+"_"+convert.str();
-    packetname="RTS_"+packetname+"_"+std::to_string(squmRTS++);
+    packetname="RTS_"+getHostName()+"_"+packetname+"_"+std::to_string(squmRTS++);
     RBVTPPacket * RTSPacket = new RBVTPPacket(packetname.c_str());
     //std::cout <<"rbvtpPacket-getName = " << rbvtpPacket(strcat("RD_",content->getName())) << endl;
     RTSPacket->setsrcAddress(getSelfIPAddress());
