@@ -138,10 +138,11 @@ private:
     simtime_t CaculateHoldTime(Coord srcPosition,Coord desPosition);
     simtime_t CaculateHoldTime(Coord srcPosition);
     void scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram);
-    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable packetwaitinglist);
+    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable &packetwaitinglist);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
     std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
+    void showpackets(PacketWaitingTable RTSpacketwaitinglist);
 
  };
 
