@@ -30,6 +30,7 @@ Register_Class(RBVTPPacket);
 RBVTPPacket::RBVTPPacket(const char *name, int kind) : ::cPacket(name,kind)
 {   roads=std::vector<std::string>();
     journal=std::vector<std::string>();
+   // version=0;
     // TODO Auto-generated constructor stub
 }
 RBVTPPacket::RBVTPPacket(const RBVTPPacket& other) : ::cPacket(other)
@@ -59,7 +60,7 @@ RBVTPPacket& RBVTPPacket::operator=(const RBVTPPacket& other)
 
 void RBVTPPacket::copy(const RBVTPPacket& other)
 {
-    this->packetTpye_var= other.packetTpye_var;
+     this->packetTpye_var= other.packetTpye_var;
      this->src_ip= other.src_ip;
      this->des_ip= other.des_ip;
      this->nexthop_ip= other.nexthop_ip;
@@ -73,12 +74,14 @@ void RBVTPPacket::copy(const RBVTPPacket& other)
      this->src_Connection=other.src_Connection;
      this->des_Connection=other.des_Connection;
      this->thisConnectionTable=other.thisConnectionTable;
+     this->version=other.version;
 }
 
 void RBVTPPacket::parsimPack(cCommBuffer *b)
 {
     ::cPacket::parsimPack(b);
     doPacking(b,this->packetTpye_var);
+    doPacking(b,this->version);
     doPacking(b,this->src_ip);
     doPacking(b,this->des_ip);
     doPacking(b,this->lastsender_ip);
@@ -99,6 +102,7 @@ void RBVTPPacket::parsimUnpack(cCommBuffer *b)
     ::cPacket::parsimUnpack(b);
     doUnpacking(b,this->packetTpye_var);
     doUnpacking(b,this->src_ip);
+    doUnpacking(b,this->version);
     doUnpacking(b,this->des_ip);
     doUnpacking(b,this->lastsender_ip);
     doUnpacking(b,this->nexthop_ip);
@@ -160,6 +164,18 @@ Coord& RBVTPPacket::getdesPosition()
 {
     return des_position;
 }
+int& RBVTPPacket::getVersion()
+{
+    return version;
+}
+void RBVTPPacket::setVersion()
+{
+     version++;
+}
+void RBVTPPacket::setVersion(int version)
+{
+     this->version=version;
+}
 int RBVTPPacket::getPacketlength()
 {
     // routingMode
@@ -207,7 +223,7 @@ void RBVTPPacket::addjournal(std::string hostid){
     journal.push_back(hostid);
 }
 std::string& RBVTPPacket::getlastjournal(bool ispop){
-    if(ispop){
+    if(ispop&&journal.size()!=1){
         journal.pop_back();
     }
     return journal.back();

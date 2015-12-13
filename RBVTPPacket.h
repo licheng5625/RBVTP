@@ -48,7 +48,7 @@ class INET_API RBVTPPacket: public cPacket {
     std::vector<std::string> roads;
     std::vector<std::string> journal;
     simtime_t lifeTime;
-
+    int version;
 
 public:
     IPvXAddress nexthop_ip;
@@ -94,6 +94,9 @@ public:
    virtual void addjournal(std::string hostid) ;
    virtual std::string&   getlastjournal(bool ispop) ;
    ConnectionTable thisConnectionTable;
+   virtual int&  getVersion();
+   void  setVersion();
+   void setVersion(int version);
 
 };
 inline void doPacking(cCommBuffer *b, RBVTPPacket& obj) {obj.parsimPack(b);}

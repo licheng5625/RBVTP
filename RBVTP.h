@@ -20,7 +20,24 @@
 #include "RBVTP/RTSwaitingtable.h"
 #include "routeInterface/BroadcastWaitingTable.h"
 #include "routeInterface/DelayPacketTable.h"
-
+class RTSInfor
+{
+    public:
+        int version;
+        int seqsum;
+        std::string name;
+        std::string desHostname;
+        bool operator == (const RTSInfor &t1) {
+             return (this->version==t1.version&&this->seqsum==t1.seqsum&&name==t1.name&&desHostname==t1.desHostname);
+         }
+        RTSInfor( int version,int seqsum, std::string name,std::string desHostname)
+        {
+            this->version=version;
+            this->seqsum=seqsum;
+            this->name=name;
+            this->desHostname=desHostname;
+            }
+};
 class INET_API RBVTP:public RouteInterface {
 public:
     RBVTP();
@@ -85,8 +102,7 @@ protected:
     // virtual void receiveChangeNotification(int category, const cObject *details);
 
 private:
-     std::vector<std::pair<std::string,std::string> >RSTSeenlist;
-
+     std::vector<RTSInfor >RSTSeenlist;
     virtual Result datagramPreRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop);
     virtual Result datagramForwardHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop){ return ACCEPT; }
     virtual Result datagramPostRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop) ;
@@ -121,11 +137,12 @@ private:
     simtime_t CaculateHoldTime(Coord srcPosition,Coord desPosition);
     simtime_t CaculateHoldTime(Coord srcPosition);
     void scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram);
-    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable packetwaitinglist);
+    void clearMessage(cMessage * message,RBVTPPacket *rbvtpPacket,PacketWaitingTable &packetwaitinglist);
     double CaculateF(double distence);
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
     std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
-    std::string getNamefromRTS(std::string rtsName);
+    void showpackets(PacketWaitingTable RTSpacketwaitinglist);
+
  };
 
 #endif /* RBVTRPACKET_H_ */
