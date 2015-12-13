@@ -85,7 +85,7 @@ protected:
     // virtual void receiveChangeNotification(int category, const cObject *details);
 
 private:
-     std::vector<string> RSTSeenlist;
+     std::vector<std::pair<std::string,std::string> >RSTSeenlist;
 
     virtual Result datagramPreRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop);
     virtual Result datagramForwardHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop){ return ACCEPT; }

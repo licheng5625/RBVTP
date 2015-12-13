@@ -378,7 +378,7 @@ RBVTPPacket * RBVTP::BroadcastRTS(RBVTPPacket * rbvtpPacket)
    EV_LOG("RBVTP","BroadcastRTS");
    RBVTPPacket *RTSPacket=createRTSPacket(rbvtpPacket);
    std::string name=RTSPacket->getName();
-   RSTSeenlist.push_back(name);
+   RSTSeenlist.push_back(std::make_pair(name,getHostName()));
    MulticastRIPacket(RTSPacket);
    return RTSPacket;
    //RTSlist.addPacket(RTSPacket->getSeqnum(),rbvtpPacket,NULL);
@@ -426,12 +426,12 @@ void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
               RBVTP_EV<<"RTSSEEN:"<<RSTSeenlist[i]<<endl;
           }*/
           RBVTP_EV<<"myRoadia"<<getRoadID()<<"    desconn::"<<rbvtpPacket->getdesconn()<<"  "<<isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn())<<endl;
-          if(((isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn()))||(getRoadID()==rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),(name))==RSTSeenlist.end()))
+          if(((isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn()))||(getRoadID()==rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),(std::make_pair(name,getHostName())))==RSTSeenlist.end()))
           {
                 RBVTP_EV<<"got RTS IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
                 RBVTPPacket *ctspacket=  createCTSPacket( rbvtpPacket);
                 scheduleReBoardcastTimer(CaculateHoldTime(ctspacket->getscrPosition(),ctspacket->getdesPosition()),ctspacket,NULL);
-                RSTSeenlist.push_back(name);
+                RSTSeenlist.push_back(std::make_pair(name,getHostName()));
           }else
           {
               RBVTP_EV<<"drop RTS IP:"<<endl;
