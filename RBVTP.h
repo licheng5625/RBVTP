@@ -114,6 +114,7 @@ private:
     int squmRU;
     int squmRTS;
     int squmDATA;
+    double distenceOfclose;
     std::string  oldroadID;
     void initConnctionsTable();
 

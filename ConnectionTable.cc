@@ -36,6 +36,10 @@ void ConnectionTable::addConnection(std::string roadsrc,std::string roaddes)
 }
 void ConnectionTable::addConnection(std::string roadsrc,std::string roaddes,Connectstate connstate)
 {
+    if (roadsrc==roaddes)
+    {
+        return;
+    }
      Connection conn=std::pair<std::string ,std::string >(roadsrc, roaddes);
      connectionstable[conn]=connstate;
 }
