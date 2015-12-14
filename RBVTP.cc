@@ -167,21 +167,32 @@ std::vector<std::string>  RBVTP::getConnections(std::string srcconn)
 void RBVTP::processCPTimer(simtime_t timer)
 {
     EV_LOG("RBVTP", "processCPTimer" );
-    if(getHostName()=="host[1]"){
-        RBVTPPacket *rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[0] ,getHostName());
-        //rbvtpPacket->addjournal(getRoadID());
-        sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
-        for(int i=0;i<2;i++)
-        {
-            double distence =(getConnectPosition(getConnOfRoad(getRoadID())[i])-getSelfPosition()).length();
-            if(distence<distenceOfclose)
-            {
-               Connectstate conn(Reachable);
-               rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[i],conn);
-               RBVTP_EV<<"i am close to Connection "<<getConnOfRoad(getRoadID())[i]<<endl;
-            }
-        //scheduleAt(simTime() + timer, CPTimer);
-        }
+    if(getHostName()=="host[16]"){
+    RBVTPPacket *rbvtpPacket;
+    double distence =(getConnectPosition(getConnOfRoad(getRoadID())[1])-getSelfPosition()).length();
+    if(distence<distenceOfclose)
+    {
+      Connectstate conn(Reachable);
+      RBVTP_EV<<"i am close to Connection "<<getConnOfRoad(getRoadID())[1]<<endl;
+       rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[0] ,getHostName());
+      rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1],conn);
+      RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getConnOfRoad(getRoadID())[1]<<" Reachable "<<endl;
+
+    }else
+    {
+        double distence =(getConnectPosition(getConnOfRoad(getRoadID())[0])-getSelfPosition()).length();
+        rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[1] ,getHostName());
+       if(distence<distenceOfclose)
+       {
+         Connectstate conn(Reachable);
+         rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[0],conn);
+         RBVTP_EV<<"i am close to Connection "<<getConnOfRoad(getRoadID())[0]<<endl;
+         RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getConnOfRoad(getRoadID())[0]<<" Reachable "<<endl;
+       }
+    }
+           //scheduleAt(simTime() + timer, CPTimer);
+    RBVTP_EV<<"send CP to"<<rbvtpPacket->getdesconn()<<endl;
+    sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
     }
  }
 
@@ -598,7 +609,20 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
             Connectstate conn(Reachable);
             RBVTP_EV<<"add Connection "<<lastconn<<" to "<<srcconn<<" Reachable "<<endl;
             rbvtpPacket->thisConnectionTable.addTwoWayConnection(lastconn,srcconn,conn);
+            if(lastconn.size()!=3&&rbvtpPacket->thisConnectionTable.getReachableConnections(lastconn).size()!=1)
+            {
+                rbvtpPacket->thisConnectionTable.addTwoWayConnection(rbvtpPacket->thisConnectionTable.getReachableConnections(lastconn)[0],rbvtpPacket->thisConnectionTable.getReachableConnections(lastconn)[1],conn);
+                RBVTP_EV<<"add Connection "<<rbvtpPacket->thisConnectionTable.getReachableConnections(lastconn)[0]<<" to "<<rbvtpPacket->thisConnectionTable.getReachableConnections(lastconn)[1]<<" Reachable "<<endl;
+            }
         }
+        RBVTP_EV<<"get connections size: "<<rbvtpPacket->thisConnectionTable.getAllConnections().size()<<endl;
+          for(int i =0 ;i<rbvtpPacket->thisConnectionTable.getAllConnections().size();i++)
+          {
+              std::pair<std::string,std::string> connes=rbvtpPacket->thisConnectionTable.getAllConnections()[i];
+              string src=connes.first;
+              string des=connes.second;
+              RBVTP_EV<<src<<" to "<<des<<" state: "<<rbvtpPacket->thisConnectionTable.getConnectState(src,des).thisflag<<endl;
+          }
         nexthopconn=findnextConn(srcconn,  rbvtpPacket->thisConnectionTable);
         if(nexthopconn==srcconn)
         {
