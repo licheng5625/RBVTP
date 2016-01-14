@@ -49,7 +49,6 @@ protected:
     PacketWaitingTable RTSpacketwaitinglist;
 
     double HoldingIndex ;
-    double recPow;
     simtime_t CPliftime;
     simtime_t RRliftime;
     simtime_t RUliftime;
@@ -118,7 +117,6 @@ private:
     std::string  oldroadID;
     void initConnctionsTable();
 
-    virtual void receiveChangeNotification(int category, const cObject *details);
     RBVTPPacket * createCPPacket(std::string scrconn,  std::string desconn,  std::string packetname);
     RBVTPPacket *createCTSPacket(RBVTPPacket *rbvtpPacket);
     RBVTPPacket * createRTSPacket(RBVTPPacket *rbvtpPacket);

@@ -8,7 +8,6 @@
 #include <RBVTP/RBVTP.h>
 #define RBVTP_EV EV << "RBVTP at " << getHostName() << " "
 #include "TraCIMobility.h"
-#include "Radio80211aControlInfo_m.h"
 Define_Module(RBVTP);
 
 RBVTP::RBVTP(){
@@ -91,23 +90,6 @@ void RBVTP::initConnctionsTable()
    // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1]);
 }
 
-void RBVTP::receiveChangeNotification(int category, const cObject *details)
-{
-    EV_LOG("RBVTP","receiveChangeNotification");
-    Enter_Method("receiveChangeNotification");
-    if (category == NF_LINK_FULL_PROMISCUOUS)
-      {
-          cPacket * pk = dynamic_cast<cPacket*>(  const_cast<cObject *>(details) );
-          if (pk)
-          {
-             Radio80211aControlInfo * cinfo = dynamic_cast<Radio80211aControlInfo*>(pk->getControlInfo());
-             if (cinfo)
-             {
-                recPow = cinfo->getRecPow();
-             }
-          }
-      }
-}
 Coord RBVTP::getConnectPosition(std::string conn)
 {
     return tracimanager->commandGetJunctionPosition(conn);
@@ -863,7 +845,7 @@ simtime_t RBVTP::CaculateHoldTime(Coord srcPosition,Coord desPosition)
     simtime_t result=A*pow(distence,a1)*pow(f,a2)*pow(p,a3)+Tmax;
     RBVTP_EV<<"wait "<<result<<"  seconds with distence "<<distence<<endl;
 
-    return result+normal(0.2, 0.05);;
+    return result;//+normal(0.2, 0.05);;
  }
 double  RBVTP::CaculateF(double distence)
 {
