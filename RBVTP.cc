@@ -90,10 +90,6 @@ void RBVTP::initConnctionsTable()
    // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1]);
 }
 
-Coord RBVTP::getConnectPosition(std::string conn)
-{
-    return tracimanager->commandGetJunctionPosition(conn);
-}
 void RBVTP::processSelfMessage(cMessage * message)
 {
        // case RTSTimeOutTimer:

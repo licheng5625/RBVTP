@@ -126,7 +126,6 @@ private:
 
    // std::vector<std::vector<std::string>> RoutingTable;
 
-    Coord  getConnectPosition(std::string conn);
     std::vector<std::string>  getConnections(std::string srcconn);
     RBVTPPacket * BroadcastRTS(RBVTPPacket * rbvtpPacket);
     void processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrlInfo);
