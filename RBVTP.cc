@@ -62,7 +62,7 @@ void RBVTP::initialize( int stage){
         {
             RBVTP_EV<<*iter<<"   "<<tracimanager->commandGetJunctionPosition(*iter)<<endl;
         }*/
-        globlePositionTable.setHostName(getSelfIPAddress(),getHostName());
+        globalPositionTable.setHostName(getSelfIPAddress(),getHostName());
         initConnctionsTable();
         nb->subscribe(this, NF_LINK_FULL_PROMISCUOUS);
         scheduleAt(simTime() + nextCPtimer, CPTimer);
@@ -472,8 +472,8 @@ void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
 void RBVTP::processCTSPACKET(RBVTPPacket * rbvtpPacket)
 {
     std::cout<<"processCTSPACKET"<<endl;
-    std::cout<<getHostName()<<" got CTS From "<<globlePositionTable.getHostName(rbvtpPacket->getsrcAddress())<<endl;
-    RBVTP_EV<<getHostName()<<" got CTS "<<rbvtpPacket<<" From "<<globlePositionTable.getHostName(rbvtpPacket->getsrcAddress())<< " to "<<globlePositionTable.getHostName(rbvtpPacket->getdesAddress())<<endl;
+    std::cout<<getHostName()<<" got CTS From "<<globalPositionTable.getHostName(rbvtpPacket->getsrcAddress())<<endl;
+    RBVTP_EV<<getHostName()<<" got CTS "<<rbvtpPacket<<" From "<<globalPositionTable.getHostName(rbvtpPacket->getsrcAddress())<< " to "<<globalPositionTable.getHostName(rbvtpPacket->getdesAddress())<<endl;
     if(rbvtpPacket->getdesAddress()!=getSelfIPAddress())
       {
         cMessage *mymsg=NULL;
@@ -544,7 +544,7 @@ void RBVTP::showpackets(PacketWaitingTable RTSpacketwaitinglist)
 void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
 {
     std::string srcconn=rbvtpPacket->getdesconn();
-    RBVTP_EV<<"receive CPPACKET from "<<globlePositionTable.getHostName(rbvtpPacket->getlastsenderAddress()) <<" with des "<<srcconn<<" version "<<rbvtpPacket->getVersion()<<endl;
+    RBVTP_EV<<"receive CPPACKET from "<<globalPositionTable.getHostName(rbvtpPacket->getlastsenderAddress()) <<" with des "<<srcconn<<" version "<<rbvtpPacket->getVersion()<<endl;
     RBVTP_EV<<"getjournal size: "<<rbvtpPacket->getjournal().size()<<endl;
    cout<<"getjournal size: "<<rbvtpPacket->getjournal().size()<<endl;
    if(rbvtpPacket->getjournal().size()==0)
@@ -784,7 +784,7 @@ RBVTPPacket *RBVTP::createCTSPacket(RBVTPPacket *rbvtpPacket)
     CTSPacket->setnexthopAddress(rbvtpPacket->getdesAddress());
     CTSPacket->setdesAddress(rbvtpPacket->getsrcAddress());
     CTSPacket->setdesPosition(rbvtpPacket->getdesPosition());
-    RBVTP_EV<<"Create CTS : scr: "<<CTSPacket->getsrcAddress()<<" des: "<<CTSPacket->getdesAddress()<<"  "<<globlePositionTable.getHostName(CTSPacket->getdesAddress())<<endl;
+    RBVTP_EV<<"Create CTS : scr: "<<CTSPacket->getsrcAddress()<<" des: "<<CTSPacket->getdesAddress()<<"  "<<globalPositionTable.getHostName(CTSPacket->getdesAddress())<<endl;
     CTSPacket->setRBVTPPacketType(RBVTP_CTS);
     CTSPacket->setSeqnum(rbvtpPacket->getSeqnum());
     CTSPacket->setscrPosition(rbvtpPacket->getscrPosition());
