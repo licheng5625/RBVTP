@@ -24,7 +24,7 @@ void RBVTP::initialize( int stage){
     if (stage == 0)
     {
         std::string myroad=getRoadID();
-        EV_LOG("RBVTP",getHostName()+"road "+myroad);
+        EV_LOG(getHostName()+"road "+myroad);
         IPSocket socket(gate("ipOut"));
         socket.registerProtocol(IP_PROT_MANET);
         squmCP=0;
@@ -56,7 +56,7 @@ void RBVTP::initialize( int stage){
         {
         oldroadID=getRoadID();
         RouteInterface::configureInterfaces(par("interfaces"));
-        EV_LOG("RBVTP",getHostName());
+        EV_LOG(getHostName());
         std::list<std::string> interjections=tracimanager->commandGetJunctionIds();
        /* for(std::list<std::string>::iterator iter=interjections.begin();iter!=interjections.end();++iter)
         {
@@ -80,7 +80,7 @@ void RBVTP::initConnctionsTable()
         //RBVTP_EV<<*iter<<endl;
          templane=templane.substr(0,8);
          myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
-         EV_LOG("RBVTP","add conn to static   :"+getConnOfRoad(templane)[0]+"  to  "+getConnOfRoad(templane)[1]);
+         EV_LOG("add conn to static   :"+getConnOfRoad(templane)[0]+"  to  "+getConnOfRoad(templane)[1]);
 
          staticConnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
         //RBVTP_EV<<templane.substr(5,7)<<endl;
@@ -95,12 +95,12 @@ void RBVTP::processSelfMessage(cMessage * message)
        // case RTSTimeOutTimer:
         //    processRTStTimer(nextCPtimer);
         //    break;
-    EV_LOG("RBVTP", "processSelfMessage" );
+    EV_LOG( "processSelfMessage" );
     RBVTP_EV<<"processSelfMessage  "<<message->getName()<<endl;
 
     if (message == CPTimer)
         {
-            EV_LOG("RBVTR", "process  CPTimer" );
+            EV_LOG( "process  CPTimer" );
             processCPTimer(nextCPtimer);
             return ;
         }
@@ -121,7 +121,7 @@ void RBVTP::processSelfMessage(cMessage * message)
 
 void RBVTP::processWaitingTimer(cMessage * message,RBVTPPacket *rbvtpPacket,const IPv4Datagram * pakcet)
 {
-    EV_LOG("RBVTR", "processRDTimer" );
+    EV_LOG( "processRDTimer" );
     if(rbvtpPacket->getPacketType()==RBVTP_CTS)
     {
         MulticastRIPacket(rbvtpPacket);
@@ -133,7 +133,7 @@ void RBVTP::processWaitingTimer(cMessage * message,RBVTPPacket *rbvtpPacket,cons
         }
         else
         {
-            EV_LOG("RBVTR","I got a NULL");
+            EV_LOG("I got a NULL");
             throw cRuntimeError("I got a NULL packet");
         }
     }
@@ -144,7 +144,7 @@ std::vector<std::string>  RBVTP::getConnections(std::string srcconn)
 }
 void RBVTP::processCPTimer(simtime_t timer)
 {
-    EV_LOG("RBVTP", "processCPTimer" );
+    EV_LOG( "processCPTimer" );
     if(getHostName()=="host[16]"){
     RBVTPPacket *rbvtpPacket;
     double distence =(getConnectPosition(getConnOfRoad(getRoadID())[1])-getSelfPosition()).length();
@@ -176,7 +176,7 @@ void RBVTP::processCPTimer(simtime_t timer)
 
 void RBVTP::processRTSTimeOutTimer(cMessage* timer)
 {
-    EV_LOG("RBVTP", "process RTSTimeOutTimer" );
+    EV_LOG( "process RTSTimeOutTimer" );
     cout<<getHostName()<<"  timer "<<timer<<endl;
     RBVTPPacket *rbvtpPacket=(check_and_cast<RBVTPPacket *>(RTSpacketwaitinglist.getcPacket(timer)))->dup();
     RBVTP_EV<<"get connections size: "<<rbvtpPacket->thisConnectionTable.getAllConnections().size()<<endl;
@@ -195,7 +195,7 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
     }
     for (int i=0;i<rbvtpPacket->getjournal().size();i++)
     {
-        EV_LOG("RBVTP","journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]);
+        EV_LOG("journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]);
     }
 
     //rbvtpPacket->getlastjournal();
@@ -290,13 +290,13 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
   }
 
 INetfilter::IHook::Result RBVTP::datagramPreRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop){
-     EV_LOG("RBVTP","datagramPreRoutingHook");
+     EV_LOG("datagramPreRoutingHook");
      Enter_Method("datagramPreRoutingHook");
       return ACCEPT;
 }
 INetfilter::IHook::Result RBVTP::datagramPostRoutingHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop)
 {
-    EV_LOG("RBVTR","datagramPostRoutingHook");
+    EV_LOG("datagramPostRoutingHook");
        const IPv4Address & destination = datagram->getDestAddress();
 
        if (destination.isMulticast() || destination.isLimitedBroadcastAddress()|| routingTable->isLocalAddress(destination))
@@ -318,21 +318,21 @@ INetfilter::IHook::Result RBVTP::datagramPostRoutingHook(IPv4Datagram * datagram
        return ACCEPT;
 }
 INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, const InterfaceEntry *& outputInterfaceEntry, IPv4Address & nextHop) {
-       EV_LOG("RBVTP","datagramLocalOutHook");
+       EV_LOG("datagramLocalOutHook");
        Enter_Method("datagramLocalOutHook");
        const IPv4Address & destination = datagram->getDestAddress();
        if (destination.isMulticast() || destination.isLimitedBroadcastAddress()|| routingTable->isLocalAddress(destination)||destination==IPv4Address::LOOPBACK_ADDRESS)
        {
-           EV_LOG("RBVTP","Multicast");
+           EV_LOG("Multicast");
            return ACCEPT;
        }
            else {
-               EV_LOG("RBVTP","check rbvtppacket");
+               EV_LOG("check rbvtppacket");
 
                RBVTPPacket * rbvtppacket=check_and_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
                if ( rbvtppacket !=NULL)
                {
-                   EV_LOG("RBVTP","rbvtppacket not null");
+                   EV_LOG("rbvtppacket not null");
                    if(rbvtppacket->getPacketType()==RBVTP_CP)
                    {
                        RBVTPPacket * rtspacket=BroadcastRTS(rbvtppacket);
@@ -362,7 +362,7 @@ INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, c
                     }*/
                }else
                {
-                   EV_LOG("RBVTP","rbvtppacket is null");
+                   EV_LOG("rbvtppacket is null");
 
                    //RBVTPPacket * rbvtpPacket = dynamic_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->decapsulate());
                   // BroadcastRTS(rbvtpPacket);
@@ -376,30 +376,30 @@ void RBVTP::processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrl
     RBVTPPacket *rbvtpPacket = dynamic_cast<RBVTPPacket *>(ctrlPacket);
     if(rbvtpPacket->getLifetime()<simTime())
     {
-        EV_LOG("RBVTR","Time out droped");
+        EV_LOG("Time out droped");
         return;
     }
      switch( rbvtpPacket->getPacketType())
     {
      case RBVTP_DATA:
-               EV_LOG("RBVTR","Process RBVTP_DATA");
+               EV_LOG("Process RBVTP_DATA");
                //processRDPACKET(rbvtpPacket);
                break;
      case RBVTP_CP:
-               EV_LOG("RBVTR","Process RBVTP_CP");
+               EV_LOG("Process RBVTP_CP");
                processCPPACKET(rbvtpPacket);
                break;
      case RBVTP_RTS:
-                EV_LOG("RBVTR","Process RBVTP_RTS");
+                EV_LOG("Process RBVTP_RTS");
                 processRTSPACKET(rbvtpPacket);
                 break;
      case RBVTP_CTS:
-                EV_LOG("RBVTR","Process RBVTP_CTS");
+                EV_LOG("Process RBVTP_CTS");
                 processCTSPACKET(rbvtpPacket);
                 break;
 
      case RBVTP_RU:
-               EV_LOG("RBVTR","Process RBVTP_RU");
+               EV_LOG("Process RBVTP_RU");
               // processRUPACKET(rbvtpPacket);
                break;
      default :
@@ -409,7 +409,7 @@ void RBVTP::processMessage(cPacket * ctrlPacket,IPv4ControlInfo *udpProtocolCtrl
 
 RBVTPPacket * RBVTP::BroadcastRTS(RBVTPPacket * rbvtpPacket)
 {
-   EV_LOG("RBVTP","BroadcastRTS");
+   EV_LOG("BroadcastRTS");
    RBVTPPacket *RTSPacket=createRTSPacket(rbvtpPacket);
    std::string name=RTSPacket->getName();
    RSTSeenlist.push_back(RTSInfor(RTSPacket->getVersion(),RTSPacket->getSeqnum(),name,getHostName()));
@@ -553,7 +553,7 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
    }
    for (int i=0;i<rbvtpPacket->getjournal().size();i++)
    {
-       EV_LOG("RBVTP","journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]);
+       EV_LOG("journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]);
    }
 
    RBVTP_EV<<"get connections size: "<<rbvtpPacket->thisConnectionTable.getAllConnections().size()<<endl;
@@ -698,7 +698,7 @@ std::string RBVTP::findnextConn(std::string srcconn,ConnectionTable myconnection
  }
 INetfilter::IHook::Result RBVTP::datagramLocalInHook(IPv4Datagram * datagram, const InterfaceEntry * inputInterfaceEntry)
 {
-    EV_LOG("RBVTR","datagramLocalInHook");
+    EV_LOG("datagramLocalInHook");
     UDPPacket *udpPacket = dynamic_cast<UDPPacket *>(datagram->getEncapsulatedPacket());
 
     // check_and_cast<cPacket *>(udpPacket->decapsulate());
@@ -749,7 +749,7 @@ void RBVTP::sendQueuePacket(const IPvXAddress& target,std::vector<std::string> r
 }
 RBVTPPacket *RBVTP::createRTSPacket(RBVTPPacket *rbvtpPacket)
 {
-    EV_LOG("RBVTP","createRTSPacket");
+    EV_LOG("createRTSPacket");
     std::string packetname=rbvtpPacket->getName();
   //  std::string packettype="RD_";
     //packetname=packetname.replace(packetname.begin(),packetname.begin()+2,"RTS");
@@ -860,7 +860,7 @@ double  RBVTP::CaculateF(double distence)
 }
 void RBVTP::scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram)
 {
-    EV_LOG("RBVTR", "Scheduling ReBoardcast timer" );
+    EV_LOG( "Scheduling ReBoardcast timer" );
     std::string timername="reBoardcastRDTimer_";
     if (rbvtpPacket->getPacketType() ==RBVTP_RU)
     {
@@ -874,9 +874,13 @@ void RBVTP::scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPac
             }
     }
     timername=timername+rbvtpPacket->getName();
-    EV_LOG("RBVTR", timername);
+    EV_LOG( timername);
     cMessage * reBoardcastTimer = new cMessage(timername.c_str());
     packetwaitinglist.addPacket(reBoardcastTimer,rbvtpPacket,datagram);
     scheduleAt(simTime() + holdingtime, reBoardcastTimer);
 }
 
+void RBVTP::EV_LOG(std::string context)
+{
+    RouteInterface::EV_LOG("RBVTP",context);
+}

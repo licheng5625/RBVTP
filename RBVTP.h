@@ -140,6 +140,7 @@ private:
     void sendQueuePacket(const IPvXAddress& target,std::vector<std::string> roads,const IPvXAddress nexthop);
     std::string findnextConn(std::string srcconn,ConnectionTable myconnectionTable);
     void showpackets(PacketWaitingTable RTSpacketwaitinglist);
+    void EV_LOG(std::string context);
 
  };
 
