@@ -66,6 +66,7 @@ protected:
     double a1;
     double a2;
     double a3;
+    string oldroadID;
 
     IInterfaceTable *interfaceTable;
     SearchTable mysearchedtable;
@@ -114,7 +115,6 @@ private:
     int squmRTS;
     int squmDATA;
     double distenceOfclose;
-    std::string  oldroadID;
     void initConnctionsTable();
 
     RBVTPPacket * createCPPacket(std::string scrconn,  std::string desconn,  std::string packetname);
@@ -132,6 +132,8 @@ private:
     void processRTSPACKET(RBVTPPacket * rbvtpPacket);
     void processCTSPACKET(RBVTPPacket * rbvtrPacket);
     void processCPPACKET(RBVTPPacket * rbvtpPacket);
+    std::string getRoadID();
+
     simtime_t CaculateHoldTime(Coord srcPosition,Coord desPosition);
     simtime_t CaculateHoldTime(Coord srcPosition);
     void scheduleReBoardcastTimer(simtime_t holdingtime,RBVTPPacket *rbvtpPacket,IPv4Datagram * datagram);

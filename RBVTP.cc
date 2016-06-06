@@ -7,6 +7,7 @@
 
 #include <RBVTP/RBVTP.h>
 #define RBVTP_EV EV << "RBVTP at " << getHostName() << " "
+#define LOG_EV inFile <<"#"<<EventNumber()<<"  "<<simTime()<< " " << getHostName() << " "
 #include "TraCIMobility.h"
 Define_Module(RBVTP);
 
@@ -32,7 +33,7 @@ void RBVTP::initialize( int stage){
         squmRU=0;
         squmDATA=0;
         squmRTS=0;
-        nextCPtimer=15;
+        nextCPtimer=0.5;
         distenceOfclose = par("distenceOfclose");
         HoldingIndex = par("HoldingIndex");
         CPliftime= par("CPliftime");
@@ -65,7 +66,7 @@ void RBVTP::initialize( int stage){
         globalPositionTable.setHostName(getSelfIPAddress(),getHostName());
         initConnctionsTable();
         nb->subscribe(this, NF_LINK_FULL_PROMISCUOUS);
-        scheduleAt(simTime() + nextCPtimer, CPTimer);
+        scheduleAt(simTime()+3 , CPTimer);
         }
     }
  }
@@ -79,15 +80,15 @@ void RBVTP::initConnctionsTable()
         {
         //RBVTP_EV<<*iter<<endl;
          templane=templane.substr(0,8);
-         myconnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
-         EV_LOG("add conn to static   :"+getConnOfRoad(templane)[0]+"  to  "+getConnOfRoad(templane)[1]);
+         myconnectionTable.addConnection(getJunctionsOfRoad(templane)[0],getJunctionsOfRoad(templane)[1]);
+         EV_LOG("add conn to static   :"+getJunctionsOfRoad(templane)[0]+"  to  "+getJunctionsOfRoad(templane)[1]);
 
-         staticConnectionTable.addConnection(getConnOfRoad(templane)[0],getConnOfRoad(templane)[1]);
+         staticConnectionTable.addConnection(getJunctionsOfRoad(templane)[0],getJunctionsOfRoad(templane)[1]);
         //RBVTP_EV<<templane.substr(5,7)<<endl;
         }
     }
-   // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[0]);
-   // staticConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1]);
+   // staticConnectionTable.addTwoWayConnection(getRoadID(),getJunctionsOfRoad(getRoadID())[0]);
+   // staticConnectionTable.addTwoWayConnection(getRoadID(),getJunctionsOfRoad(getRoadID())[1]);
 }
 
 void RBVTP::processSelfMessage(cMessage * message)
@@ -104,7 +105,7 @@ void RBVTP::processSelfMessage(cMessage * message)
             processCPTimer(nextCPtimer);
             return ;
         }
-    if (std::string(message->getName()) == "RTSTimeOutTimer")
+    if (std::string(message->getName()) == "CPRTSTimeOutTimer")
        {
            processRTSTimeOutTimer(message);
            return ;
@@ -145,30 +146,31 @@ std::vector<std::string>  RBVTP::getConnections(std::string srcconn)
 void RBVTP::processCPTimer(simtime_t timer)
 {
     EV_LOG( "processCPTimer" );
-    if(getHostName()=="host[16]"){
-    RBVTPPacket *rbvtpPacket;
-    double distence =(getConnectPosition(getConnOfRoad(getRoadID())[1])-getSelfPosition()).length();
-    if(distence<distenceOfclose)
+    if( rand() % 10<2&&getHostName()=="host[4]")
     {
-      Connectstate conn(Reachable);
-      RBVTP_EV<<"i am close to Connection "<<getConnOfRoad(getRoadID())[1]<<endl;
-       rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[0] ,getHostName());
-      rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[1],conn);
-      RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getConnOfRoad(getRoadID())[1]<<" Reachable "<<endl;
+        RBVTPPacket *rbvtpPacket;
+        double distence =(getPositionOfJunction(getJunctionsOfRoad(getRoadID())[1])-getSelfPosition()).length();
+        if(distence<distenceOfclose)
+        {
+          Connectstate conn(Reachable);
+          RBVTP_EV<<"i am close to Connection "<<getJunctionsOfRoad(getRoadID())[1]<<endl;
+           rbvtpPacket=createCPPacket(getRoadID(),getJunctionsOfRoad(getRoadID())[0] ,getHostName());
+          rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getJunctionsOfRoad(getRoadID())[1],conn);
+          RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getJunctionsOfRoad(getRoadID())[1]<<" Reachable "<<endl;
 
-    }else
-    {
-        double distence =(getConnectPosition(getConnOfRoad(getRoadID())[0])-getSelfPosition()).length();
-        rbvtpPacket=createCPPacket(getRoadID(),getConnOfRoad(getRoadID())[1] ,getHostName());
-       if(distence<distenceOfclose)
-       {
-         Connectstate conn(Reachable);
-         rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getConnOfRoad(getRoadID())[0],conn);
-         RBVTP_EV<<"i am close to Connection "<<getConnOfRoad(getRoadID())[0]<<endl;
-         RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getConnOfRoad(getRoadID())[0]<<" Reachable "<<endl;
-       }
-    }
-           //scheduleAt(simTime() + timer, CPTimer);
+        }else
+        {
+            double distence =(getPositionOfJunction(getJunctionsOfRoad(getRoadID())[0])-getSelfPosition()).length();
+            rbvtpPacket=createCPPacket(getRoadID(),getJunctionsOfRoad(getRoadID())[1] ,getHostName());
+           if(distence<distenceOfclose)
+           {
+             Connectstate conn(Reachable);
+             rbvtpPacket->thisConnectionTable.addTwoWayConnection(getRoadID(),getJunctionsOfRoad(getRoadID())[0],conn);
+             RBVTP_EV<<"i am close to Connection "<<getJunctionsOfRoad(getRoadID())[0]<<endl;
+             RBVTP_EV<<"add Connection "<<getRoadID()<<" to "<<getJunctionsOfRoad(getRoadID())[0]<<" Reachable "<<endl;
+           }
+        }
+           scheduleAt(simTime() + timer, CPTimer);
     RBVTP_EV<<"send CP to"<<rbvtpPacket->getdesconn()<<endl;
     sendRIPacket(rbvtpPacket,rbvtpPacket->getdesAddress(),255,0);
     }
@@ -211,7 +213,7 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
     }
     if(srcconn.size()==3) //normal connection
        {
-        double distence =(getConnectPosition(srcconn)-getSelfPosition()).length();
+        double distence =(getPositionOfJunction(srcconn)-getSelfPosition()).length();
         if(distence<distenceOfclose)
         {
             RBVTP_EV<<"i am close to Connection "<<srcconn<<endl;
@@ -241,12 +243,12 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
                          return ;
                      }else
                      {
-                       if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getConnOfRoad(srcconn)[0])
+                       if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getJunctionsOfRoad(srcconn)[0])
                        {
-                           nexthopconn=   getConnOfRoad(srcconn)[0];
+                           nexthopconn=   getJunctionsOfRoad(srcconn)[0];
                        }else
                        {
-                           nexthopconn=   getConnOfRoad(srcconn)[1];
+                           nexthopconn=   getJunctionsOfRoad(srcconn)[1];
                        }
                      }
                  }
@@ -254,16 +256,16 @@ void RBVTP::processRTSTimeOutTimer(cMessage* timer)
                  {
                     nexthopconn=srcconn;
                  }
-            std::cout<<"add Connection "<<getConnOfRoad(srcconn)[0]<<" to "<<getConnOfRoad(srcconn)[1]<<" UnReachable "<<endl;
+            std::cout<<"add Connection "<<getJunctionsOfRoad(srcconn)[0]<<" to "<<getJunctionsOfRoad(srcconn)[1]<<" UnReachable "<<endl;
             Connectstate conn(Unreachable);
-            rbvtpPacket->thisConnectionTable.addTwoWayConnection(getConnOfRoad(srcconn)[0],getConnOfRoad(srcconn)[1],conn);
-            RBVTP_EV<<"add Connection "<<getConnOfRoad(srcconn)[0]<<" to "<<getConnOfRoad(srcconn)[1]<<" UnReachable "<<endl;
+            rbvtpPacket->thisConnectionTable.addTwoWayConnection(getJunctionsOfRoad(srcconn)[0],getJunctionsOfRoad(srcconn)[1],conn);
+            RBVTP_EV<<"add Connection "<<getJunctionsOfRoad(srcconn)[0]<<" to "<<getJunctionsOfRoad(srcconn)[1]<<" UnReachable "<<endl;
        }
 
    rbvtpPacket->setdesconn(nexthopconn);
    if(nexthopconn.size()==3)
    {
-       rbvtpPacket->setdesPosition(getConnectPosition(nexthopconn));
+       rbvtpPacket->setdesPosition(getPositionOfJunction(nexthopconn));
    }
    else
    {
@@ -329,14 +331,14 @@ INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, c
            else {
                EV_LOG("check rbvtppacket");
 
-               RBVTPPacket * rbvtppacket=check_and_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
+               RBVTPPacket * rbvtppacket=dynamic_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->getEncapsulatedPacket());
                if ( rbvtppacket !=NULL)
                {
                    EV_LOG("rbvtppacket not null");
                    if(rbvtppacket->getPacketType()==RBVTP_CP)
                    {
                        RBVTPPacket * rtspacket=BroadcastRTS(rbvtppacket);
-                       cMessage* RTSTimeOutTimer = new cMessage("RTSTimeOutTimer");
+                       cMessage* RTSTimeOutTimer = new cMessage("CPRTSTimeOutTimer");
                        cout<<getHostName()<<" add timer "<<RTSTimeOutTimer<<"  ";
                        printf("%p\n",RTSTimeOutTimer);
                        RTSpacketwaitinglist.addPacket(RTSTimeOutTimer,rbvtppacket,datagram);
@@ -363,9 +365,9 @@ INetfilter::IHook::Result RBVTP::datagramLocalOutHook(IPv4Datagram * datagram, c
                }else
                {
                    EV_LOG("rbvtppacket is null");
-
-                   //RBVTPPacket * rbvtpPacket = dynamic_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->decapsulate());
-                  // BroadcastRTS(rbvtpPacket);
+                   return  DROP;
+                    //RBVTPPacket * rbvtpPacket = dynamic_cast<RBVTPPacket *>( (dynamic_cast<UDPPacket *>((dynamic_cast<cPacket *>(datagram))->getEncapsulatedPacket()))->decapsulate());
+                    //BroadcastRTS(rbvtpPacket);
                }
            }
         delayPacketlist.addPacket(destination,datagram);
@@ -429,7 +431,7 @@ RBVTPPacket *RBVTP::createCPPacket(std::string scrconn,  std::string desconn,  s
     rBVTPPacket->setSeqnum(squmCP);
     rBVTPPacket->setdesAddress(IPv4Address::UNSPECIFIED_ADDRESS);
     rBVTPPacket->setscrPosition(getSelfPosition());
-    rBVTPPacket->setdesPosition(getConnectPosition(desconn));
+    rBVTPPacket->setdesPosition(getPositionOfJunction(desconn));
     rBVTPPacket->setBitLength(rBVTPPacket->getPacketlength());
     rBVTPPacket->addroad(getRoadID());
     rBVTPPacket->setdesconn(desconn);
@@ -442,22 +444,35 @@ RBVTPPacket *RBVTP::createCPPacket(std::string scrconn,  std::string desconn,  s
    // rBVTPPacket->encapsulate(content);
     return rBVTPPacket;
 }
-
+std::string RBVTP::getRoadID()
+{
+    string myroad =RouteInterface::getRoadID();
+    if(myroad.length()!=8) //if the car in the intersection get the roadID before the car go into the intersection
+    {
+        return oldroadID;
+    }else
+    {
+        return myroad;
+    }
+}
 void RBVTP::processRTSPACKET(RBVTPPacket * rbvtpPacket)
 {
+    EV_LOG("here");
     if(rbvtpPacket->getlastsenderAddress()!=getSelfIPAddress())
     {
           std::vector <std::string> routingroad=rbvtpPacket->getroads();
           std::string name=rbvtpPacket->getName();
           RBVTP_EV<<"RTS:"<<name<<endl;
-
+          cout<<"RTS:"<<name<<endl;
          /* for(int i=0;i<RSTSeenlist.size();i++)
           {
               RBVTP_EV<<"RTSSEEN:"<<RSTSeenlist[i]<<endl;
           }*/
-          RBVTP_EV<<"myRoadia"<<getRoadID()<<"    desconn::"<<rbvtpPacket->getdesconn()<<"  "<<isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn())<<endl;
+          RBVTP_EV<<"myRoadid "<<getRoadID()<<"    desconn::"<<rbvtpPacket->getdesconn()<<"  "<<isRoadOfJunction(getRoadID(),rbvtpPacket->getdesconn())<<endl;
+          cout<<"myRoadia"<<getRoadID()<<"    desconn::"<<rbvtpPacket->getdesconn()<<"  "<<isRoadOfJunction(getRoadID(),rbvtpPacket->getdesconn())<<endl;
+
           RTSInfor myinfor=RTSInfor(rbvtpPacket->getVersion(),rbvtpPacket->getSeqnum(),name,getHostName());
-          if(((isRoadOfConn(getRoadID(),rbvtpPacket->getdesconn()))||(getRoadID()==rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),myinfor)==RSTSeenlist.end()))
+          if(((isRoadOfJunction(getRoadID(),rbvtpPacket->getdesconn()))||(getRoadID()==rbvtpPacket->getdesconn()))&&(std::find(RSTSeenlist.begin(),RSTSeenlist.end(),myinfor)==RSTSeenlist.end()))
           {
                 RBVTP_EV<<"got RTS IP:"<<rbvtpPacket->getsrcAddress()<<"  SQUM: "<<rbvtpPacket->getSeqnum()<<endl;
                 RBVTPPacket *ctspacket=  createCTSPacket( rbvtpPacket);
@@ -554,6 +569,7 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
    for (int i=0;i<rbvtpPacket->getjournal().size();i++)
    {
        EV_LOG("journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]);
+       LOG_EV<<"journal "+std::to_string(i)+" : "+rbvtpPacket->getjournal()[i]<<endl;
    }
 
    RBVTP_EV<<"get connections size: "<<rbvtpPacket->thisConnectionTable.getAllConnections().size()<<endl;
@@ -563,10 +579,11 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
        string src=connes.first;
        string des=connes.second;
        RBVTP_EV<<src<<" to "<<des<<" state: "<<rbvtpPacket->thisConnectionTable.getConnectState(src,des).thisflag<<endl;
+       LOG_EV<<src<<" to "<<des<<" state: "<<rbvtpPacket->thisConnectionTable.getConnectState(src,des).thisflag<<endl;
    }
     double distence ;
     if(srcconn.size()==3){
-        distence= (getConnectPosition(srcconn)-getSelfPosition()).length();
+        distence= (getPositionOfJunction(srcconn)-getSelfPosition()).length();
     }else
     {
         distence=0;
@@ -618,15 +635,15 @@ void RBVTP::processCPPACKET(RBVTPPacket * rbvtpPacket)
                         return ;
                     }else
                     {
-                      if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getConnOfRoad(srcconn)[0])
+                      if(rbvtpPacket->thisConnectionTable.getConnections(srcconn)[0]==getJunctionsOfRoad(srcconn)[0])
                       {
-                          nexthopconn=   getConnOfRoad(srcconn)[1];
-                          RBVTP_EV<<"src got pacekt return from "<<getConnOfRoad(srcconn)[0]<<endl;
+                          nexthopconn=   getJunctionsOfRoad(srcconn)[1];
+                          RBVTP_EV<<"src got pacekt return from "<<getJunctionsOfRoad(srcconn)[0]<<endl;
 
                       }else
                       {
-                          nexthopconn=   getConnOfRoad(srcconn)[0];
-                          RBVTP_EV<<"src got pacekt return from "<<getConnOfRoad(srcconn)[1]<<endl;
+                          nexthopconn=   getJunctionsOfRoad(srcconn)[0];
+                          RBVTP_EV<<"src got pacekt return from "<<getJunctionsOfRoad(srcconn)[1]<<endl;
 
                       }
                     }
